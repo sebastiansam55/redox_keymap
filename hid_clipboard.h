@@ -81,6 +81,17 @@
 #define HID_CLIP_STATUS_OK        0x00
 #define HID_CLIP_STATUS_BUSY      0x01
 
+/*
+ * Inter-chunk delay (streaming mode only).
+ * A pause inserted after send_string() and before the deferred ACK is sent,
+ * which prevents the host from delivering the next chunk until the OS has
+ * settled from the previous one.  Helps with shifted characters on slow hosts.
+ * Override in config.h: #define HID_CLIP_INTER_CHUNK_DELAY_MS 50
+ */
+#ifndef HID_CLIP_INTER_CHUNK_DELAY_MS
+#  define HID_CLIP_INTER_CHUNK_DELAY_MS 0
+#endif
+
 /* Custom keycode — chain from SAFE_RANGE so keymap.c can use HID_CLIPBOARD_SAFE_RANGE */
 enum hid_clipboard_keycodes {
     KC_TYPE_CLIP = SAFE_RANGE,

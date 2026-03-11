@@ -9,6 +9,7 @@ AUTOCORRECT_ENABLE = yes
 RAW_ENABLE = yes
 
 # for troubleshooting enable and then run `qmk console`
+# may also have to disable autocorrect/dynamic to have enough firmware room
 # CONSOLE_ENABLE = yes
 
 

@@ -12,6 +12,7 @@ static char     hid_clip_buf[HID_CLIP_MAX_LEN + 1];
 static uint16_t hid_clip_len    = 0;
 static bool     hid_clip_ready  = false;  /* set when last chunk received   */
 static bool     hid_clip_typing = false;  /* guard against re-entrant sends */
+static bool     hid_clip_cancelled = false; /* set by KC_ESC to abort transfer */
 
 /* Streaming state (total_chunks == HID_CLIP_STREAM_SENTINEL path) */
 static char    hid_clip_stream_buf[HID_CLIP_DATA_SIZE + 1]; /* one chunk + NUL */
@@ -102,8 +103,9 @@ void raw_hid_receive_hid_clipboard(uint8_t *data, uint8_t length) {
     /* Reset buffer on the first chunk of a new transfer */
     if (chunk_index == 0) {
         dprintf("hid_clipboard: new transfer, resetting buffer\n");
-        hid_clip_len   = 0;
-        hid_clip_ready = false;
+        hid_clip_len       = 0;
+        hid_clip_ready     = false;
+        hid_clip_cancelled = false;
         memset(hid_clip_buf, 0, sizeof(hid_clip_buf));
     }
 
@@ -139,13 +141,39 @@ void raw_hid_receive_hid_clipboard(uint8_t *data, uint8_t length) {
 void housekeeping_task_hid_clipboard(void) {
     /* -- Streaming path: type chunk, then send deferred ACK -- */
     if (hid_clip_stream_ready && !hid_clip_typing) {
+        /*
+         * Cancel check BEFORE typing.
+         *
+         * send_string() busy-waits internally, so the matrix is not scanned
+         * while it runs.  An ESC pressed during chunk N's send_string() is
+         * only picked up by process_record in the next keyboard_task()
+         * iteration — which runs before housekeeping, so hid_clip_cancelled
+         * will be true here when chunk N+1 is about to be typed.  Checking
+         * after send_string() is always one cycle too early to be useful.
+         */
+        if (hid_clip_cancelled) {
+            dprintf("hid_clipboard: cancelled by ESC, rejecting chunk %u\n", hid_clip_stream_ack_idx);
+            hid_clip_cancelled    = false;
+            hid_clip_stream_ready = false;
+            uint8_t nack[RAW_EPSIZE] = {0};
+            nack[0] = HID_CLIP_CMD;
+            nack[1] = hid_clip_stream_ack_idx;
+            nack[2] = HID_CLIP_STATUS_BUSY;
+            raw_hid_send(nack, RAW_EPSIZE);
+            return;
+        }
+
         hid_clip_stream_buf[hid_clip_stream_len] = '\0';
         hid_clip_stream_ready = false;
         hid_clip_typing       = true;
         dprintf("hid_clipboard: stream typing %u bytes\n", hid_clip_stream_len);
         send_string(hid_clip_stream_buf);
         dprintf("hid_clipboard: stream typing done\n");
+#if HID_CLIP_INTER_CHUNK_DELAY_MS > 0
+        wait_ms(HID_CLIP_INTER_CHUNK_DELAY_MS);
+#endif
         hid_clip_typing = false;
+
         uint8_t ack[RAW_EPSIZE] = {0};
         ack[0] = HID_CLIP_CMD;
         ack[1] = hid_clip_stream_ack_idx;
@@ -157,6 +185,12 @@ void housekeeping_task_hid_clipboard(void) {
 
     /* -- Buffered path -- */
     if (hid_clip_ready && !hid_clip_typing) {
+        if (hid_clip_cancelled) {
+            dprintf("hid_clipboard: cancelled by ESC before buffered typing\n");
+            hid_clip_cancelled = false;
+            hid_clip_ready     = false;
+            return;
+        }
         dprintf("hid_clipboard: typing %u bytes\n", hid_clip_len);
         hid_clip_ready  = false;
         hid_clip_typing = true;
@@ -176,11 +210,21 @@ bool process_record_hid_clipboard(uint16_t keycode, keyrecord_t *record) {
     if (keycode == KC_TYPE_CLIP && record->event.pressed) {
         dprintf("hid_clipboard: KC_TYPE_CLIP pressed, requesting clipboard from host\n");
         if (!hid_clip_typing) {
+            hid_clip_cancelled = false;  /* clear any stale cancel before new transfer */
             uint8_t request[RAW_EPSIZE] = {0};
             request[0] = HID_CLIP_REQ_CMD;
             raw_hid_send(request, RAW_EPSIZE);
         }
         return false;
     }
+
+    if (keycode == KC_ESC && record->event.pressed) {
+        // if (hid_clip_typing || hid_clip_stream_ready || hid_clip_ready) {
+            dprintf("hid_clipboard: ESC pressed, cancelling clipboard transfer\n");
+            hid_clip_cancelled = true;
+            /* pass the keypress through so ESC still works in the active app */
+        // }
+    }
+
     return true;
 }
