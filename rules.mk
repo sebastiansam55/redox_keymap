@@ -10,10 +10,11 @@ RAW_ENABLE = yes
 
 # for troubleshooting enable and then run `qmk console`
 # may also have to disable autocorrect/dynamic to have enough firmware room
-# CONSOLE_ENABLE = yes
+CONSOLE_ENABLE = no
 
 
 LTO_ENABLE = yes
 SPACE_CADET_ENABLE = no
 GRAVE_ESC_ENABLE = no
 MAGIC_ENABLE = no
+MUSIC_ENABLE = no
