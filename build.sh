@@ -23,10 +23,11 @@ python3 "$REPO_DIR/gen_keymap.py"
 
 # Sync repo files into QMK keymap directory
 echo "Syncing files to $KEYMAP_DIR..."
-cp "$REPO_DIR/keymap.c"                  "$KEYMAP_DIR/keymap.c"
-cp "$REPO_DIR/hid_clipboard.c"           "$KEYMAP_DIR/hid_clipboard.c"
-cp "$REPO_DIR/hid_clipboard.h"           "$KEYMAP_DIR/hid_clipboard.h"
-cp "$REPO_DIR/rules.mk"                  "$KEYMAP_DIR/rules.mk"
+cp "$REPO_DIR/keymap.c" "$KEYMAP_DIR/keymap.c"
+cp "$REPO_DIR/config.h" "$KEYMAP_DIR/config.h"
+cp "$REPO_DIR/hid_clipboard.c" "$KEYMAP_DIR/hid_clipboard.c"
+cp "$REPO_DIR/hid_clipboard.h" "$KEYMAP_DIR/hid_clipboard.h"
+cp "$REPO_DIR/rules.mk" "$KEYMAP_DIR/rules.mk"
 cp "$REPO_DIR/autocorrect_dictionary.txt" "$KEYMAP_DIR/autocorrect_dictionary.txt"
 
 echo "Generating autocorrect data..."
