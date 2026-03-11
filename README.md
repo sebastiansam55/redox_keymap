@@ -127,6 +127,82 @@ type-clipboard --text "..."   Send literal text instead of clipboard
 type-clipboard --delay MS     Inter-chunk delay
 ```
 
+## Running `listen` as a systemd user service
+
+### Wayland / clipboard access caveat
+
+`wl-paste` requires two environment variables that systemd user services do not
+inherit automatically from the desktop session:
+
+| Variable | Notes |
+|----------|-------|
+| `XDG_RUNTIME_DIR` | Set automatically for `systemctl --user` services |
+| `WAYLAND_DISPLAY` | **Must be set manually** in the unit file |
+
+Check the correct value in your terminal before installing:
+
+```bash
+echo $WAYLAND_DISPLAY   # typically wayland-0 or wayland-1
+```
+
+Edit `WAYLAND_DISPLAY=` in `qmk-hid-clipboard.service` to match, then follow
+the steps below.  If you use X11 instead of Wayland, replace the line with
+`Environment=DISPLAY=:0` and ensure `xclip` or `xsel` is installed.
+
+### HID device permissions
+
+Without a udev rule the HID device is root-only.  Create
+`/etc/udev/rules.d/50-qmk-hid.rules` (replace VID/PID with your keyboard's):
+
+```
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="feed", ATTRS{idProduct}=="0000", TAG+="uaccess"
+```
+
+Reload udev and re-plug the keyboard:
+
+```bash
+sudo udevadm control --reload-rules
+sudo udevadm trigger
+```
+
+`TAG+="uaccess"` grants access to the currently logged-in user without needing
+a static group.
+
+### Install and enable the service
+
+```bash
+# 1. Copy the unit file to the systemd user directory
+mkdir -p ~/.config/systemd/user
+cp qmk-hid-clipboard.service ~/.config/systemd/user/
+
+# 2. Edit VID, PID, script path, and WAYLAND_DISPLAY inside the file
+nano ~/.config/systemd/user/qmk-hid-clipboard.service
+
+# 3. Reload systemd and enable the service
+systemctl --user daemon-reload
+systemctl --user enable --now qmk-hid-clipboard.service
+
+# Check status / logs
+systemctl --user status qmk-hid-clipboard.service
+journalctl --user -u qmk-hid-clipboard.service -f
+```
+
+The service starts automatically when your graphical session starts and restarts
+itself if it crashes (e.g. after a USB disconnect/reconnect).
+
+### Propagating the environment automatically (optional)
+
+Instead of hardcoding `WAYLAND_DISPLAY` in the unit file you can propagate it
+from the session startup.  Add this to your `~/.profile`, `~/.bash_profile`, or
+session autostart:
+
+```bash
+systemctl --user import-environment WAYLAND_DISPLAY XDG_RUNTIME_DIR DISPLAY
+```
+
+Then remove the `Environment=WAYLAND_DISPLAY=…` line from the unit file and run
+`systemctl --user daemon-reload`.
+
 ## Private macro system
 
 Sensitive strings (passwords, URLs, work paths) live in gitignored files:

@@ -349,6 +349,28 @@ class ListenCommand(Command):
 
         print("  done — keyboard is typing the clipboard text")
 
+    def _reconnect(self, device_info: dict, retry_interval: float = 2.0) -> tuple[hid.Device, dict]:
+        """Block until the device reappears, then return a new (dev, device_info) pair."""
+        vid        = device_info["vendor_id"]
+        pid        = device_info["product_id"]
+        usage_page = device_info["usage_page"]
+        usage      = device_info["usage"]
+        print(f"Keyboard disconnected. Waiting to reconnect (VID=0x{vid:04X} PID=0x{pid:04X})…")
+        while True:
+            time.sleep(retry_interval)
+            new_info = find_device(vid, pid, usage_page, usage)
+            if new_info is None:
+                continue
+            try:
+                dev = hid.Device(path=new_info["path"])
+                path_str = (new_info["path"].decode(errors="replace")
+                            if isinstance(new_info["path"], bytes)
+                            else new_info["path"])
+                print(f"Reconnected on {path_str}")
+                return dev, new_info
+            except Exception as exc:
+                log.debug("Reconnect attempt failed: %s", exc)
+
     def run(self, device_info: dict, timeout_ms: int) -> None:
         path = device_info["path"]
         path_str = path.decode(errors="replace") if isinstance(path, bytes) else path
@@ -357,19 +379,32 @@ class ListenCommand(Command):
         dev = hid.Device(path=path)
         try:
             while True:
-                # Poll with a short timeout so KeyboardInterrupt stays responsive
-                data = dev.read(RAW_EPSIZE, 200)
-                if not data:
-                    continue
-                data = bytes(data)
-                log.debug("RX: %s", self.pretty(data))
-                if data[0] == self.CMD_CLIP_REQ:
-                    print("Keyboard requested clipboard")
-                    self._send_clipboard(dev, timeout_ms)
+                try:
+                    # Poll with a short timeout so KeyboardInterrupt stays responsive
+                    data = dev.read(RAW_EPSIZE, 200)
+                    if not data:
+                        continue
+                    data = bytes(data)
+                    log.debug("RX: %s", self.pretty(data))
+                    if data[0] == self.CMD_CLIP_REQ:
+                        print("Keyboard requested clipboard")
+                        self._send_clipboard(dev, timeout_ms)
+                except KeyboardInterrupt:
+                    raise
+                except Exception as exc:
+                    log.debug("HID error: %s", exc)
+                    try:
+                        dev.close()
+                    except Exception:
+                        pass
+                    dev, device_info = self._reconnect(device_info)
         except KeyboardInterrupt:
             print("\nStopped.")
         finally:
-            dev.close()
+            try:
+                dev.close()
+            except Exception:
+                pass
 
 
 # ---------------------------------------------------------------------------

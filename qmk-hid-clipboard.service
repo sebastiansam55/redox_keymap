@@ -1,0 +1,34 @@
+[Unit]
+Description=QMK HID clipboard daemon (listen for TYPCLIP key)
+# Start after the graphical session is up so wl-paste / xclip can reach the display
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+# --- Edit these three values ---
+ExecStart=/usr/bin/python3 /home/%u/redox/qmk_hid_tool.py \
+    --vid 0x4D44 \
+    --pid 0x5244 \
+    --timeout 8000 \
+    listen
+# --------------------------------
+
+Restart=on-failure
+RestartSec=5
+
+# wl-paste needs WAYLAND_DISPLAY and XDG_RUNTIME_DIR.
+# XDG_RUNTIME_DIR is set automatically for systemd user services (%t expands to it).
+# WAYLAND_DISPLAY is *not* propagated automatically; set it here.
+# Common values: wayland-0 (most compositors), wayland-1 (some multi-seat setups).
+# If unsure, run: echo $WAYLAND_DISPLAY  in your terminal.
+Environment=WAYLAND_DISPLAY=wayland-1
+# Ensure user pip packages (e.g. hidapi) are visible to the system python.
+# Get the correct path with: python3 -c "import site; print(site.getusersitepackages())"
+Environment=PYTHONPATH=/home/%u/.local/lib/python3.11/site-packages
+
+# Fallback: if you use X11 (xclip/xsel), replace the above with:
+# Environment=DISPLAY=:0
+
+[Install]
+WantedBy=graphical-session.target
