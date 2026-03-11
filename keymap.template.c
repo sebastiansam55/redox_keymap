@@ -87,7 +87,9 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             break;
         case WORK2:
             if (record -> event.pressed) {
-                SEND_STRING("C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\Temporary ASP.NET Files");
+                SEND_STRING("C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319");
+                wait_ms(100);
+                SEND_STRING("\\Temporary ASP.NET Files");
             }
             break;
         case COPYLINE:
