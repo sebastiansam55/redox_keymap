@@ -1,0 +1,12 @@
+{
+  "buttons": {
+    "1": {"action": "shell", "command": "notify-send 'Button 1 pressed'"},
+    "2": {"action": "shell", "command": "xdg-open https://example.com"},
+    "3": {"action": "shell", "command": "/home/sam/scripts/my_script.sh"},
+    "4": {"action": "shell", "command": "playerctl play-pause"},
+    "5": {"action": "shell", "command": "playerctl next"},
+    "6": {"action": "shell", "command": "playerctl previous"},
+    "7": {"action": "shell", "command": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+"},
+    "8": {"action": "shell", "command": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"}
+  }
+}

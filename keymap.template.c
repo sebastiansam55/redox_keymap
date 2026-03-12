@@ -43,6 +43,19 @@ enum layers {
 // Shortcut to make keymap more readable
 #define SYM_L   MO(_SYMB)
 
+// HID daemon button aliases — send 0x05 packets to the Python listen daemon.
+// Distinct from QMK's built-in PB_1..PB_32 (QK_PROGRAMMABLE_BUTTON_N) which
+// generate OS-level HID button reports on usage page 0x0C.
+// HID 1 / HID 2 used to 
+#define HIDB_1 KC_HID_BTN_1 //previous clipboard history entry
+#define HIDB_2 KC_HID_BTN_2 //next clipboard history entry
+#define HIDB_3 KC_HID_BTN_3
+#define HIDB_4 KC_HID_BTN_4
+#define HIDB_5 KC_HID_BTN_5
+#define HIDB_6 KC_HID_BTN_6
+#define HIDB_7 KC_HID_BTN_7
+#define HIDB_8 KC_HID_BTN_8
+
 #define KC_ALAS LALT_T(KC_PAST)
 #define KC_CTPL LCTL_T(KC_BSLS)
 
@@ -165,7 +178,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   //├────────┼────────┼────────┼────────┼────────┼────────┼────────┤                                ├────────┼────────┼────────┼────────┼────────┼────────┼────────┤
      XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,COPYLINE,                                 _______ ,XXXXXXX ,XXXXXXX ,XXXXXXX   ,XXXXXXX,XXXXXXX ,XXXXXXX ,
   //├────────┼────────┼────────┼────────┼────────┼────────┼────────┼────────┐              ┌────────┼────────┼────────┼────────┼────────┼────────┼────────┼────────┤
-     _______ ,KC_F5   , KC_F12 ,XXXXXXX ,XXXXXXX ,XXXXXXX ,LCTL(KC_F12) ,LCTL(KC_F11),      KC_PGUP ,KC_PGDN ,XXXXXXX ,XXXXXXX ,MS_WHLL,MS_WHLD ,MS_WHLU, MS_WHLR,
+     _______ ,KC_F5   , KC_F12 ,XXXXXXX ,XXXXXXX ,XXXXXXX ,HIDB_2 , HIDB_1,                 KC_PGUP ,KC_PGDN ,XXXXXXX ,XXXXXXX ,MS_WHLL,MS_WHLD ,MS_WHLU, MS_WHLR,
   //├────────┼────────┼────────┼────────┼────┬───┴────┬───┼────────┼────────┤              ├────────┼────────┼───┬────┴───┬────┼────────┼────────┼────────┼────────┤
      XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,   LCTL(KC_X),LCTL(KC_C),LCTL(KC_V),               MS_BTN1 ,MS_BTN2,     MS_BTN3 ,     MS_LEFT ,MS_DOWN ,MS_UP   ,MS_RGHT
   //└────────┴────────┴────────┴────────┘    └────────┘   └────────┴────────┘              └────────┴────────┘   └────────┘    └────────┴────────┴────────┴────────┘
@@ -184,10 +197,10 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
      _______ ,_______ ,_______ ,_______ ,     _______ ,    _______ ,_______ ,        _______ ,_______ ,    _______ ,     _______ ,_______ ,_______ ,_______
   //└────────┴────────┴────────┴────────┘    └────────┘   └────────┴────────┘       └────────┴────────┘   └────────┘    └────────┴────────┴────────┴────────┘
   ),
-  // right interior layer
+  // right interior layer — HIDB_N keys send Raw HID 0x05 packets to the Python daemon
   [_FN2] = LAYOUT(
   //┌────────┬────────┬────────┬────────┬────────┬────────┐                                           ┌────────┬────────┬────────┬────────┬────────┬────────┐
-     _______ ,_______ ,_______ ,_______ ,_______ ,_______ ,                                            _______ ,_______ ,_______ ,_______ ,_______ ,_______ ,
+     _______ ,HIDB_1  ,HIDB_2  ,HIDB_3  ,HIDB_4  ,_______ ,                                            _______ ,HIDB_5  ,HIDB_6  ,HIDB_7  ,HIDB_8  ,_______ ,
   //├────────┼────────┼────────┼────────┼────────┼────────┼────────┐                         ┌────────┼────────┼────────┼────────┼────────┼────────┼────────┤
      _______ ,_______ ,_______ ,_______ ,_______ ,_______ ,_______ ,                          _______ ,_______ ,_______ ,_______ ,_______ ,_______ ,_______ ,
   //├────────┼────────┼────────┼────────┼────────┼────────┼────────┤                         ├────────┼────────┼────────┼────────┼────────┼────────┼────────┤

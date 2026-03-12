@@ -207,6 +207,18 @@ void housekeeping_task_hid_clipboard(void) {
  * then types them out.  Returns false when handled, true otherwise.
  */
 bool process_record_hid_clipboard(uint16_t keycode, keyrecord_t *record) {
+    if (keycode >= KC_HID_BTN_1 && keycode <= KC_HID_BTN_8) {
+        if (record->event.pressed) {
+            uint8_t btn_id = keycode - KC_HID_BTN_1 + 1;  /* 1-based */
+            uint8_t pkt[RAW_EPSIZE] = {0};
+            pkt[0] = HID_CMD_BUTTON;
+            pkt[1] = btn_id;
+            dprintf("hid_clipboard: button %u pressed, sending HID_CMD_BUTTON\n", btn_id);
+            raw_hid_send(pkt, RAW_EPSIZE);
+        }
+        return false;
+    }
+
     if (keycode == KC_TYPE_CLIP && record->event.pressed) {
         dprintf("hid_clipboard: KC_TYPE_CLIP pressed, requesting clipboard from host\n");
         if (!hid_clip_typing) {

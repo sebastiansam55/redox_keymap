@@ -67,6 +67,7 @@
 #define HID_ECHO_CMD        0x02  /* host→kb: echo payload back             */
 #define HID_CLIP_CMD        0x03  /* host→kb: chunked clipboard text        */
 #define HID_CLIP_REQ_CMD    0x04  /* kb→host: request clipboard from host   */
+#define HID_CMD_BUTTON      0x05  /* kb→host: programmable button press     */
 
 /* Chunk geometry */
 #define HID_CLIP_DATA_OFF   4
@@ -92,10 +93,18 @@
 #  define HID_CLIP_INTER_CHUNK_DELAY_MS 0
 #endif
 
-/* Custom keycode — chain from SAFE_RANGE so keymap.c can use HID_CLIPBOARD_SAFE_RANGE */
+/* Custom keycodes — chain from SAFE_RANGE so keymap.c can use HID_CLIPBOARD_SAFE_RANGE */
 enum hid_clipboard_keycodes {
     KC_TYPE_CLIP = SAFE_RANGE,
-    HID_CLIPBOARD_SAFE_RANGE
+    KC_HID_BTN_1,   /* programmable button 1 */
+    KC_HID_BTN_2,
+    KC_HID_BTN_3,
+    KC_HID_BTN_4,
+    KC_HID_BTN_5,
+    KC_HID_BTN_6,
+    KC_HID_BTN_7,
+    KC_HID_BTN_8,
+    HID_CLIPBOARD_SAFE_RANGE   /* keymap.c chains its custom codes here */
 };
 #define TYPCLIP KC_TYPE_CLIP
 

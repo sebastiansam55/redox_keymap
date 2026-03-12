@@ -24,7 +24,9 @@ Example::
 """
 
 import argparse
+import json
 import logging
+import os
 import platform
 import subprocess
 import sys
@@ -285,7 +287,9 @@ class TypeClipboardCommand(Command):
 
 class ListenCommand(Command):
     """Daemon mode: wait for 0x04 clipboard-request packets from the keyboard,
-    read the host clipboard, and send it back as 0x03 chunks.
+    read the host clipboard, and send it back as 0x03 chunks.  Also handles
+    0x05 programmable-button packets by running shell commands from a JSON
+    config file.
 
     Run this once and leave it running; press TYPCLIP on the keyboard to trigger.
     """
@@ -295,10 +299,21 @@ class ListenCommand(Command):
 
     CMD_CLIP     = TypeClipboardCommand.CMD_ID          # 0x03
     CMD_CLIP_REQ = 0x04                                 # keyboard → host
+    CMD_BUTTON   = 0x05                                 # keyboard → host
     CHUNK_DATA_OFFSET = TypeClipboardCommand.CHUNK_DATA_OFFSET
     CHUNK_DATA_SIZE   = TypeClipboardCommand.CHUNK_DATA_SIZE
     MAX_CHUNKS        = TypeClipboardCommand.MAX_CHUNKS
     MAX_TEXT_BYTES    = TypeClipboardCommand.MAX_TEXT_BYTES
+
+    def __init__(self, config_path: str = "~/.config/qmk_buttons.json") -> None:
+        path = os.path.expanduser(config_path)
+        if os.path.exists(path):
+            with open(path) as f:
+                config = json.load(f)
+            self._button_config = config.get("buttons", {})
+        else:
+            self._button_config = {}
+            print(f"[warn] button config not found: {path}", file=sys.stderr)
 
     # build_packet / handle_response are unused; run() drives everything.
     def build_packet(self) -> bytes:  # pragma: no cover
@@ -389,6 +404,19 @@ class ListenCommand(Command):
                     if data[0] == self.CMD_CLIP_REQ:
                         print("Keyboard requested clipboard")
                         self._send_clipboard(dev, timeout_ms)
+                    elif data[0] == self.CMD_BUTTON:
+                        btn_id = str(data[1])
+                        entry = self._button_config.get(btn_id)
+                        if entry:
+                            action = entry.get("action")
+                            if action == "shell":
+                                cmd = entry.get("command", "")
+                                print(f"[btn {btn_id}] running: {cmd}", file=sys.stderr)
+                                subprocess.Popen(cmd, shell=True)
+                            else:
+                                print(f"[btn {btn_id}] unknown action: {action}", file=sys.stderr)
+                        else:
+                            print(f"[btn {btn_id}] no config entry", file=sys.stderr)
                 except KeyboardInterrupt:
                     raise
                 except Exception as exc:
@@ -582,7 +610,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
 
     # listen (daemon)
-    subparsers.add_parser(ListenCommand.name, help=ListenCommand.description)
+    listen_p = subparsers.add_parser(ListenCommand.name, help=ListenCommand.description)
+    listen_p.add_argument(
+        "--config", default="~/.config/qmk_buttons.json", metavar="PATH",
+        help="Path to button action config JSON (default: ~/.config/qmk_buttons.json)",
+    )
 
     return parser
 
@@ -597,7 +629,7 @@ def build_command(args: argparse.Namespace) -> Command:
     if args.command == "type-clipboard":
         return TypeClipboardCommand(text=args.text, delay_ms=args.delay)
     if args.command == "listen":
-        return ListenCommand()
+        return ListenCommand(config_path=args.config)
     raise ValueError(f"Unknown command: {args.command!r}")
 
 
