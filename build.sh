@@ -48,3 +48,7 @@ fi
 
 echo "Flashing $HEX_FILE..."
 qmk flash "$HEX_FILE"
+
+echo "Waiting to restart espanso service"
+sleep 5
+espanso restart
