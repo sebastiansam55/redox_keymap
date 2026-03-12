@@ -27,6 +27,11 @@ enum custom_keycodes {
     WINLOCAL,
     WORK1,
     COPYLINE,
+    WRAPQU,   /* '' unshifted, "" shifted  */
+    WRAPBRF,  /* [] unshifted, {} shifted  */
+    WRAPPR,   /* ()                        */
+    WRAPTK,   /* ``                        */
+    WRAPAG,   /* <>                        */
 // %%PRIVATE_KEYCODES%%
 };
 
@@ -49,8 +54,8 @@ enum layers {
 // HID 1 / HID 2 used to 
 #define HIDB_1 KC_HID_BTN_1 //previous clipboard history entry
 #define HIDB_2 KC_HID_BTN_2 //next clipboard history entry
-#define HIDB_3 KC_HID_BTN_3
-#define HIDB_4 KC_HID_BTN_4
+#define HIDB_3 KC_HID_BTN_3 //toggle mic mute VisibilityUnobscured
+#define HIDB_4 KC_HID_BTN_4 //run gnome-screenshot
 #define HIDB_5 KC_HID_BTN_5
 #define HIDB_6 KC_HID_BTN_6
 #define HIDB_7 KC_HID_BTN_7
@@ -84,6 +89,13 @@ void housekeeping_task_user(void) {
 //   // debug_mouse=true;
 // }
 
+
+#define WRAP_SEL(open, close)   \
+    tap_code16(C(KC_C));        \
+    wait_ms(50);                \
+    SEND_STRING(open);          \
+    tap_code16(C(KC_V));        \
+    SEND_STRING(close)
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     if (!process_record_hid_clipboard(keycode, record)) return false;
@@ -120,6 +132,25 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 tap_code16(KC_RGHT);
             }
             break;
+        case WRAPQU:
+            if (record->event.pressed) {
+                bool shifted = get_mods() & MOD_MASK_SHIFT;
+                del_mods(MOD_MASK_SHIFT);
+                if (shifted) { WRAP_SEL("\"", "\""); }
+                else         { WRAP_SEL("'",  "'");  }
+            }
+            return false;
+        case WRAPBRF:
+            if (record->event.pressed) {
+                bool shifted = get_mods() & MOD_MASK_SHIFT;
+                del_mods(MOD_MASK_SHIFT);
+                if (shifted) { WRAP_SEL("{", "}"); }
+                else         { WRAP_SEL("[", "]"); }
+            }
+            return false;
+        case WRAPPR: if (record->event.pressed) { WRAP_SEL("(", ")"); } return false;
+        case WRAPTK: if (record->event.pressed) { WRAP_SEL("`", "`"); } return false;
+        case WRAPAG: if (record->event.pressed) { WRAP_SEL("<", ">"); } return false;
         // %%PRIVATE_CASES%%
     }
     return true;
@@ -186,15 +217,15 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   // left interior layer
   [_FN1] = LAYOUT(
   //┌────────┬────────┬────────┬────────┬────────┬────────┐                                           ┌────────┬────────┬────────┬────────┬────────┬────────┐
-     _______ ,PB_1    ,PB_2    ,_______ ,_______ ,_______ ,                                            _______ ,_______ ,_______ ,_______ ,_______ ,_______ ,
+     WRAPTK  ,PB_1    ,PB_2    ,_______ ,_______ ,_______ ,                                            _______ ,_______ ,_______ ,WRAPPR  ,_______ ,_______ ,
   //├────────┼────────┼────────┼────────┼────────┼────────┼────────┐                         ┌────────┼────────┼────────┼────────┼────────┼────────┼────────┤
-     _______ ,TYPCLIP,_______ ,_______ ,_______ ,_______ ,_______ ,                          _______ ,_______ ,_______ ,_______ ,_______ ,_______ ,_______ ,
+     _______ ,WRAPQU  ,WRAPAG  ,_______ ,HIDB_4  ,_______ ,HIDB_3  ,                          _______ ,_______ ,_______ ,_______ ,_______ ,_______ ,_______ ,
   //├────────┼────────┼────────┼────────┼────────┼────────┼────────┤                         ├────────┼────────┼────────┼────────┼────────┼────────┼────────┤
      _______ ,_______ ,_______ ,_______ ,_______ ,_______ ,OSL(_FN1),                          OSL(_FN2),_______ ,_______ ,_______ ,_______ ,_______ ,_______ ,
   //├────────┼────────┼────────┼────────┼────────┼────────┼────────┼────────┐       ┌────────┼────────┼────────┼────────┼────────┼────────┼────────┼────────┤
-     _______ ,_______ ,_______ ,_______ ,_______ ,_______ ,_______ ,_______ ,        _______ ,_______ ,_______ ,_______ ,_______ ,_______ ,_______ ,_______ ,
+     _______ ,_______ ,_______ ,_______ ,_______ ,_______ ,KC_APP ,_______ ,        WRAPBRF ,_______ ,_______ ,_______ ,_______ ,_______ ,_______ ,_______ ,
   //├────────┼────────┼────────┼────────┼────┬───┴────┬───┼────────┼────────┤       ├────────┼────────┼───┬────┴───┬────┼────────┼────────┼────────┼────────┤
-     _______ ,_______ ,_______ ,_______ ,     _______ ,    _______ ,_______ ,        _______ ,_______ ,    _______ ,     _______ ,_______ ,_______ ,_______
+     _______ ,_______ ,_______ ,_______ ,     _______ ,    _______ ,TYPCLIP ,        _______ ,_______ ,    _______ ,     _______ ,_______ ,_______ ,_______
   //└────────┴────────┴────────┴────────┘    └────────┘   └────────┴────────┘       └────────┴────────┘   └────────┘    └────────┴────────┴────────┴────────┘
   ),
   // right interior layer — HIDB_N keys send Raw HID 0x05 packets to the Python daemon
