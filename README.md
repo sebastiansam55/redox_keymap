@@ -13,15 +13,16 @@ Personal QMK firmware keymap for the [Redox rev1](https://github.com/mattdibi/re
 ## Repository layout
 
 ```
-keymap.template.c       Public keymap template (markers for private injection)
-keymap.c                Generated — do not edit directly
-hid_clipboard.c/.h      Raw HID clipboard module (standalone, no community module)
-rules.mk                QMK feature flags
+keymap.template.c           Public keymap template (markers for private injection)
+keymap.c                    Generated — do not edit directly
+hid_clipboard.c/.h          Raw HID clipboard module (standalone, no community module)
+rules.mk                    QMK feature flags
 autocorrect_dictionary.txt  Source for on-device autocorrect
-gen_keymap.py           Injects private/keycodes.inc + private/cases.inc → keymap.c
-build.sh                One-shot: generate → compile → flash
-qmk_hid_tool.py         Host-side HID tool (ping, echo, type-clipboard, listen)
-private/                Gitignored — personal keycodes and macro strings
+gen_keymap.py               Injects private/keycodes.inc + private/cases.inc → keymap.c
+build.sh                    One-shot: generate → compile → flash
+qmk_hid_tool.py             Host-side HID tool (ping, echo, type-clipboard, listen)
+qmk_buttons.example.json    Example button action config — copy to ~/.config/qmk_buttons.json
+private/                    Gitignored — personal keycodes and macro strings
 ```
 
 ## Build and flash
@@ -62,8 +63,8 @@ For debug output: set `CONSOLE_ENABLE = yes` in `rules.mk` and run `qmk console`
 | `_DVORAK` | default | Base layer |
 | `_SYMB` | `SYM_L` (both sides) | Symbols + numpad |
 | `_COMBO` | `KC_CMB` (left outer thumb) | F-keys, mouse keys, cut/copy/paste |
-| `_FN1` | `OSL(_FN1)` (left inner thumb) | Clipboard (`TYPCLIP`), programmable buttons |
-| `_FN2` | `OSL(_FN2)` (right inner thumb) | (reserved) |
+| `_FN1` | `OSL(_FN1)` (left inner thumb) | Clipboard (`TYPCLIP`), QMK programmable buttons (`PB_1`/`PB_2`) |
+| `_FN2` | `OSL(_FN2)` (right inner thumb) | HID daemon buttons `HIDB_1`–`HIDB_8` (top row) |
 | `_ADJUST` | `LT(_ADJUST, KC_END/KC_LBRC)` | Macros, dynamic macros, media |
 
 ## HID clipboard (`hid_clipboard.c`)
@@ -103,6 +104,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 | `0x03` | host → keyboard | Clipboard chunk (chunked text transfer) |
 | `0x03` | keyboard → host | ACK per chunk |
 | `0x04` | keyboard → host | Clipboard request (sent when `TYPCLIP` pressed) |
+| `0x05` | keyboard → host | Programmable button press (`HIDB_1`–`HIDB_8`); byte 1 = button ID (1–8) |
 
 ## Host tool (`qmk_hid_tool.py`)
 
@@ -116,16 +118,41 @@ python qmk_hid_tool.py --vid 0xXXXX --pid 0xXXXX type-clipboard
 python qmk_hid_tool.py --vid 0xXXXX --pid 0xXXXX listen   # daemon mode
 ```
 
-**`listen` mode** runs as a background daemon. When `TYPCLIP` is pressed on the keyboard, the keyboard sends a `0x04` request; the daemon reads the host clipboard and streams it back as `0x03` chunks.
+**`listen` mode** runs as a background daemon. When `TYPCLIP` is pressed on the keyboard, the keyboard sends a `0x04` request; the daemon reads the host clipboard and streams it back as `0x03` chunks. When a `HIDB_N` key is pressed, the keyboard sends a `0x05` packet; the daemon looks up the button ID in a JSON config and runs the configured shell command.
 
 Additional options:
 
 ```
 --timeout MS        HID read timeout (default: 1000 ms; use ~8000 in streaming mode)
 --debug             Verbose HID packet logging
+--config PATH       Button action config (default: ~/.config/qmk_buttons.json)
 type-clipboard --text "..."   Send literal text instead of clipboard
 type-clipboard --delay MS     Inter-chunk delay
 ```
+
+### Programmable buttons (`HIDB_1`–`HIDB_8`)
+
+Copy the example config and edit it to suit:
+
+```bash
+cp qmk_buttons.example.json ~/.config/qmk_buttons.json
+```
+
+Config format (`~/.config/qmk_buttons.json`):
+
+```json
+{
+  "buttons": {
+    "1": {"action": "shell", "command": "notify-send 'Button 1 pressed'"},
+    "2": {"action": "shell", "command": "playerctl play-pause"},
+    "3": {"action": "shell", "command": "/home/sam/scripts/my_script.sh"}
+  }
+}
+```
+
+Keys are string button IDs `"1"`–`"8"`. Only buttons with entries do anything; unrecognised button IDs print a warning to stderr and are ignored. The `listen` daemon must be running for button presses to trigger actions.
+
+> **Note:** `HIDB_N` (HID daemon buttons) are distinct from QMK's native `PB_N` (`QK_PROGRAMMABLE_BUTTON_N`) keys. `PB_N` generate OS-level HID button reports on usage page 0x0C that the desktop can bind to actions without a daemon. `HIDB_N` send Raw HID `0x05` packets that require the Python `listen` daemon to act on.
 
 ## Running `listen` as a systemd user service
 

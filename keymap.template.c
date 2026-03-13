@@ -51,7 +51,6 @@ enum layers {
 // HID daemon button aliases — send 0x05 packets to the Python listen daemon.
 // Distinct from QMK's built-in PB_1..PB_32 (QK_PROGRAMMABLE_BUTTON_N) which
 // generate OS-level HID button reports on usage page 0x0C.
-// HID 1 / HID 2 used to 
 #define HIDB_1 KC_HID_BTN_1 //previous clipboard history entry
 #define HIDB_2 KC_HID_BTN_2 //next clipboard history entry
 #define HIDB_3 KC_HID_BTN_3 //toggle mic mute VisibilityUnobscured
