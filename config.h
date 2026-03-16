@@ -1,10 +1,28 @@
 #define HID_CLIP_INTER_CHUNK_DELAY_MS 50
 
+// RGB underglow on by default
+// #define RGBLIGHT_DEFAULT_ON true
+// #define RGBLIGHT_DEFAULT_MODE RGBLIGHT_MODE_STATIC_LIGHT
+// #define RGBLIGHT_DEFAULT_HUE 0
+// #define RGBLIGHT_DEFAULT_SAT 255
+// #define RGBLIGHT_DEFAULT_VAL 128
+// #undef RGB_DI_PIN
+// #define RGB_DI_PIN NO_PIN // Just as a test to ensure no conflict
 
 // reduce the firmware size
 // using up to 9 layers
 #define LAYER_STATE_8BIT
 
 
-// disable music mode
-#define NO_MUSIC_MODE
+// audio
+#define AUDIO_PIN 12
+#define AUDIO_PWM_DRIVER PWMD6
+#define AUDIO_PWM_CHANNEL RP2040_PWM_CHANNEL_A
+// Optional: If you want a startup melody
+#define AUDIO_INIT_DELAY
+// #define STARTUP_SONG SONG(QMK_STARTUP_SOUND)
+#define AUDIO_CLICKY
+
+#ifdef AUDIO_ENABLE
+  #define STARTUP_SONG SONG(PLANCK_SOUND)
+#endif

@@ -25,6 +25,8 @@ python3 "$REPO_DIR/gen_keymap.py"
 echo "Syncing files to $KEYMAP_DIR..."
 cp "$REPO_DIR/keymap.c" "$KEYMAP_DIR/keymap.c"
 cp "$REPO_DIR/config.h" "$KEYMAP_DIR/config.h"
+cp "$REPO_DIR/halconf.h" "$KEYMAP_DIR/halconf.h"
+cp "$REPO_DIR/mcuconf.h" "$KEYMAP_DIR/mcuconf.h"
 cp "$REPO_DIR/hid_clipboard.c" "$KEYMAP_DIR/hid_clipboard.c"
 cp "$REPO_DIR/hid_clipboard.h" "$KEYMAP_DIR/hid_clipboard.h"
 cp "$REPO_DIR/rules.mk" "$KEYMAP_DIR/rules.mk"
@@ -36,18 +38,56 @@ qmk generate-autocorrect-data -kb "$KEYBOARD" -km "$KEYMAP" \
   "$KEYMAP_DIR/autocorrect_dictionary.txt" >"$KEYMAP_DIR/autocorrect_data.h"
 
 echo "Compiling ${KEYBOARD}:${KEYMAP}..."
-qmk compile -kb "$KEYBOARD" -km "$KEYMAP"
+qmk compile -kb "$KEYBOARD" -km "$KEYMAP" -e CONVERT_TO=elite_pi
 
-# Find the most recent .hex file in current directory
-HEX_FILE="$(ls -t ./*.hex 2>/dev/null | head -n1 || true)"
+# Find the most recent .uf2 file in current directory
+UF2_FILE="$(ls -t ./*.uf2 2>/dev/null | head -n1 || true)"
 
-if [[ -z "$HEX_FILE" ]]; then
-  echo "Error: No .hex file found after compilation."
+if [[ -z "$UF2_FILE" ]]; then
+  echo "Error: No .uf2 file found after compilation."
   exit 1
 fi
 
-echo "Flashing $HEX_FILE..."
-qmk flash "$HEX_FILE"
+# Find the Elite-Pi / RP2040 drive (shows up as RPI-RP2 in bootloader mode)
+RPI_DRIVE="$(findmnt -rno TARGET -S LABEL=RPI-RP2 2>/dev/null || true)"
+if [[ -z "$RPI_DRIVE" ]]; then
+  for d in /media/"$USER"/RPI-RP2 /run/media/"$USER"/RPI-RP2 /mnt/RPI-RP2; do
+    if [[ -d "$d" ]]; then
+      RPI_DRIVE="$d"
+      break
+    fi
+  done
+fi
+
+if [[ -z "$RPI_DRIVE" ]]; then
+  echo "RPI-RP2 drive not found. Waiting for it to appear..."
+  echo "  (hold BOOT/RESET while plugging in, or use QK_BOOT keycode)"
+  for i in $(seq 1 30); do
+    sleep 2
+    RPI_DRIVE="$(findmnt -rno TARGET -S LABEL=RPI-RP2 2>/dev/null || true)"
+    if [[ -z "$RPI_DRIVE" ]]; then
+      for d in /media/"$USER"/RPI-RP2 /run/media/"$USER"/RPI-RP2 /mnt/RPI-RP2; do
+        if [[ -d "$d" ]]; then
+          RPI_DRIVE="$d"
+          break
+        fi
+      done
+    fi
+    if [[ -n "$RPI_DRIVE" ]]; then
+      echo "Drive found at $RPI_DRIVE"
+      break
+    fi
+    echo "  Still waiting... (${i}/30)"
+  done
+fi
+
+if [[ -z "$RPI_DRIVE" ]]; then
+  echo "Error: RPI-RP2 drive not found after 60 seconds. Giving up."
+  exit 1
+fi
+
+echo "Copying $UF2_FILE to $RPI_DRIVE..."
+cp "$UF2_FILE" "$RPI_DRIVE/"
 
 echo "Waiting to restart espanso service"
 sleep 5
