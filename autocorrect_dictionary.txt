@@ -3,3 +3,6 @@ taht -> that
 liason -> liaison
 guarntee -> guarantee
 avialable -> available
+initializiation -> initialization
+implented -> implemented
+discission -> discussion

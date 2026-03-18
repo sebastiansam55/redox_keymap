@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include QMK_KEYBOARD_H
 #include "hid_clipboard.h"
 #include "print.h"
+#include "digitizer.h"
 
 // Private custom keycodes — injected from private/keycodes.inc at build time.
 // To add your own: create private/keycodes.inc with an enum custom_keycodes block
@@ -33,7 +34,55 @@ enum custom_keycodes {
     WRAPTK,   /* ``                        */
     WRAPAG,   /* <>                        */
     SONG_NEXT, /* cycle through user_song_list songs */
+    PRINT_WPM, /* print current WPM to QMK console */
+    WARP_CTR,  /* warp cursor to center of screen via digitizer */
 // %%PRIVATE_KEYCODES%%
+};
+
+// Song arrays for cycling — order matches user_song_list.h top-to-bottom
+float song_list_imperial_march[][2]        = SONG(IMPERIAL_MARCH);
+float song_list_coin_sound[][2]            = SONG(COIN_SOUND);
+float song_list_one_up_sound[][2]          = SONG(ONE_UP_SOUND);
+float song_list_sonic_ring[][2]            = SONG(SONIC_RING);
+float song_list_zelda_puzzle[][2]          = SONG(ZELDA_PUZZLE);
+float song_list_zelda_treasure[][2]        = SONG(ZELDA_TREASURE);
+float song_list_overwatch_theme[][2]       = SONG(OVERWATCH_THEME);
+float song_list_mario_theme[][2]           = SONG(MARIO_THEME);
+float song_list_mario_gameover[][2]        = SONG(MARIO_GAMEOVER);
+float song_list_mario_mushroom[][2]        = SONG(MARIO_MUSHROOM);
+float song_list_e1m1_doom[][2]             = SONG(E1M1_DOOM);
+float song_list_disney_song[][2]           = SONG(DISNEY_SONG);
+float song_list_number_one[][2]            = SONG(NUMBER_ONE);
+float song_list_cabbage_song[][2]          = SONG(CABBAGE_SONG);
+float song_list_old_spice[][2]             = SONG(OLD_SPICE);
+float song_list_victory_fanfare_short[][2] = SONG(VICTORY_FANFARE_SHORT);
+float song_list_all_star[][2]              = SONG(ALL_STAR);
+float song_list_rick_roll[][2]             = SONG(RICK_ROLL);
+float song_list_ff_prelude[][2]            = SONG(FF_PRELUDE);
+float song_list_to_boldly_go[][2]          = SONG(TO_BOLDLY_GO);
+float song_list_kataware_doki[][2]         = SONG(KATAWARE_DOKI);
+float song_list_megalovania[][2]           = SONG(MEGALOVANIA);
+float song_list_michishirube[][2]          = SONG(MICHISHIRUBE);
+float song_list_liebesleid[][2]            = SONG(LIEBESLEID);
+float song_list_melodies_of_life[][2]      = SONG(MELODIES_OF_LIFE);
+float song_list_eyes_on_me[][2]            = SONG(EYES_ON_ME);
+float song_list_song_of_the_ancients[][2]  = SONG(SONG_OF_THE_ANCIENTS);
+float song_list_nier_amusement_park[][2]   = SONG(NIER_AMUSEMENT_PARK);
+float song_list_copied_city[][2]           = SONG(COPIED_CITY);
+float song_list_vague_hope_cold_rain[][2]  = SONG(VAGUE_HOPE_COLD_RAIN);
+float song_list_kaine_salvation[][2]       = SONG(KAINE_SALVATION);
+float song_list_weight_of_the_world[][2]   = SONG(WEIGHT_OF_THE_WORLD);
+float song_list_isabellas_lullaby[][2]     = SONG(ISABELLAS_LULLABY);
+
+#define NUM_USER_SONGS 33
+static uint8_t song_cycle_index = 0;
+
+enum tap_dance_codes {
+    TD_ESC,
+};
+
+tap_dance_action_t tap_dance_actions[] = {
+    [TD_ESC] = ACTION_TAP_DANCE_DOUBLE(KC_NO, KC_ESC),
 };
 
 enum layers {
@@ -151,6 +200,56 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case WRAPPR: if (record->event.pressed) { WRAP_SEL("(", ")"); } return false;
         case WRAPTK: if (record->event.pressed) { WRAP_SEL("`", "`"); } return false;
         case WRAPAG: if (record->event.pressed) { WRAP_SEL("<", ">"); } return false;
+        case SONG_NEXT:
+            if (record->event.pressed) {
+                switch (song_cycle_index) {
+                    case  0: PLAY_SONG(song_list_imperial_march);        break;
+                    case  1: PLAY_SONG(song_list_coin_sound);            break;
+                    case  2: PLAY_SONG(song_list_one_up_sound);          break;
+                    case  3: PLAY_SONG(song_list_sonic_ring);            break;
+                    case  4: PLAY_SONG(song_list_zelda_puzzle);          break;
+                    case  5: PLAY_SONG(song_list_zelda_treasure);        break;
+                    case  6: PLAY_SONG(song_list_overwatch_theme);       break;
+                    case  7: PLAY_SONG(song_list_mario_theme);           break;
+                    case  8: PLAY_SONG(song_list_mario_gameover);        break;
+                    case  9: PLAY_SONG(song_list_mario_mushroom);        break;
+                    case 10: PLAY_SONG(song_list_e1m1_doom);             break;
+                    case 11: PLAY_SONG(song_list_disney_song);           break;
+                    case 12: PLAY_SONG(song_list_number_one);            break;
+                    case 13: PLAY_SONG(song_list_cabbage_song);          break;
+                    case 14: PLAY_SONG(song_list_old_spice);             break;
+                    case 15: PLAY_SONG(song_list_victory_fanfare_short); break;
+                    case 16: PLAY_SONG(song_list_all_star);              break;
+                    case 17: PLAY_SONG(song_list_rick_roll);             break;
+                    case 18: PLAY_SONG(song_list_ff_prelude);            break;
+                    case 19: PLAY_SONG(song_list_to_boldly_go);          break;
+                    case 20: PLAY_SONG(song_list_kataware_doki);         break;
+                    case 21: PLAY_SONG(song_list_megalovania);           break;
+                    case 22: PLAY_SONG(song_list_michishirube);          break;
+                    case 23: PLAY_SONG(song_list_liebesleid);            break;
+                    case 24: PLAY_SONG(song_list_melodies_of_life);      break;
+                    case 25: PLAY_SONG(song_list_eyes_on_me);            break;
+                    case 26: PLAY_SONG(song_list_song_of_the_ancients);  break;
+                    case 27: PLAY_SONG(song_list_nier_amusement_park);   break;
+                    case 28: PLAY_SONG(song_list_copied_city);           break;
+                    case 29: PLAY_SONG(song_list_vague_hope_cold_rain);  break;
+                    case 30: PLAY_SONG(song_list_kaine_salvation);       break;
+                    case 31: PLAY_SONG(song_list_weight_of_the_world);   break;
+                    case 32: PLAY_SONG(song_list_isabellas_lullaby);     break;
+                }
+                song_cycle_index = (song_cycle_index + 1) % NUM_USER_SONGS;
+            }
+            return false;
+        case WARP_CTR:
+            if (record->event.pressed) {
+                digitizer_set_position(0.5, 0.5);
+            }
+            return false;
+        case PRINT_WPM:
+            if (record->event.pressed) {
+                uprintf("WPM: %u\n", get_current_wpm());
+            }
+            return false;
         // %%PRIVATE_CASES%%
     }
     return true;
@@ -164,7 +263,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   //├────────┼────────┼────────┼────────┼────────┼────────┼────────┐                         ┌────────┼────────┼────────┼────────┼────────┼────────┼────────┤
      KC_TAB  ,KC_QUOT , KC_COMM, KC_DOT ,KC_P    ,KC_Y    ,SYM_L   ,                          SYM_L   ,KC_F    ,KC_G    ,KC_C    ,KC_R    ,KC_L    ,KC_BSLS ,
   //├────────┼────────┼────────┼────────┼────────┼────────┼────────┤                         ├────────┼────────┼────────┼────────┼────────┼────────┼────────┤
-     KC_ESC  ,KC_A    ,KC_O    ,KC_E    ,KC_U    ,KC_I    ,OSL(_FN1),                        OSL(_FN2),KC_D    ,KC_H    ,KC_T    ,KC_N    ,KC_S    ,KC_SLSH ,
+     TD(TD_ESC),KC_A    ,KC_O    ,KC_E    ,KC_U    ,KC_I    ,OSL(_FN1),                        OSL(_FN2),KC_D    ,KC_H    ,KC_T    ,KC_N    ,KC_S    ,KC_SLSH ,
   //├────────┼────────┼────────┼────────┼────────┼────────┼────────┼────────┐       ┌────────┼────────┼────────┼────────┼────────┼────────┼────────┼────────┤
      KC_LSFT ,KC_SCLN ,KC_Q    ,KC_J    ,KC_K    ,KC_X    ,KC_HOME ,KC_ADEN ,       KC_ADLBR ,KC_RBRC ,KC_B    ,KC_M    ,KC_W    ,KC_V    ,KC_Z    ,KC_NO   ,
   //├────────┼────────┼────────┼────────┼────┬───┴────┬───┼────────┼────────┤       ├────────┼────────┼───┬────┴───┬────┼────────┼────────┼────────┼────────┤
@@ -179,7 +278,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   // //├────────┼────────┼────────┼────────┼────────┼────────┼────────┐                         ┌────────┼────────┼────────┼────────┼────────┼────────┼────────┤
   //    KC_TAB  ,KC_Q    ,KC_W    ,KC_E    ,KC_R    ,KC_T    ,SYM_L   ,                          SYM_L   ,KC_Y    ,KC_U    ,KC_I    ,KC_O    ,KC_P    ,KC_EQL  ,
   // //├────────┼────────┼────────┼────────┼────────┼────────┼────────┤                         ├────────┼────────┼────────┼────────┼────────┼────────┼────────┤
-  //    KC_ESC  ,KC_A    ,KC_S    ,KC_D    ,KC_F    ,KC_G    ,OSL(_FN1),                          OSL(_FN2),KC_H    ,KC_J    ,KC_K    ,KC_L    ,KC_SCLN ,KC_QUOT ,
+  //    TD(TD_ESC),KC_A    ,KC_S    ,KC_D    ,KC_F    ,KC_G    ,OSL(_FN1),                          OSL(_FN2),KC_H    ,KC_J    ,KC_K    ,KC_L    ,KC_SCLN ,KC_QUOT ,
   // //├────────┼────────┼────────┼────────┼────────┼────────┼────────┼────────┐       ┌────────┼────────┼────────┼────────┼────────┼────────┼────────┼────────┤
   //    KC_LSFT ,KC_Z    ,KC_X    ,KC_C    ,KC_V    ,KC_B    ,KC_HOME ,KC_ADEN ,       KC_PGUP  ,KC_PGDN ,KC_N    ,KC_M    ,KC_COMM ,KC_DOT  ,KC_SLSH ,KC_NO ,
   // //├────────┼────────┼────────┼────────┼────┬───┴────┬───┼────────┼────────┤       ├────────┼────────┼───┬────┴───┬────┼────────┼────────┼────────┼────────┤
@@ -217,7 +316,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   // left interior layer
   [_FN1] = LAYOUT(
   //┌────────┬────────┬────────┬────────┬────────┬────────┐                                           ┌────────┬────────┬────────┬────────┬────────┬────────┐
-     WRAPTK  ,PB_1    ,PB_2    ,_______ ,_______ ,_______ ,                                            _______ ,_______ ,_______ ,WRAPPR  ,_______ ,_______ ,
+     WRAPTK  ,PB_1    ,PB_2    ,_______ ,_______ ,_______ ,                                            _______ ,_______ ,WARP_CTR,WRAPPR  ,_______ ,_______ ,
   //├────────┼────────┼────────┼────────┼────────┼────────┼────────┐                         ┌────────┼────────┼────────┼────────┼────────┼────────┼────────┤
      _______ ,WRAPQU  ,WRAPAG  ,_______ ,HIDB_4  ,_______ ,HIDB_3  ,                          _______ ,_______ ,_______ ,_______ ,_______ ,_______ ,_______ ,
   //├────────┼────────┼────────┼────────┼────────┼────────┼────────┤                         ├────────┼────────┼────────┼────────┼────────┼────────┼────────┤
@@ -237,7 +336,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   //├────────┼────────┼────────┼────────┼────────┼────────┼────────┤                         ├────────┼────────┼────────┼────────┼────────┼────────┼────────┤
      _______ ,_______ ,_______ ,_______ ,_______ ,_______ ,OSL(_FN1),                        OSL(_FN2),_______ ,_______ ,_______ ,_______ ,_______ ,_______ ,
   //├────────┼────────┼────────┼────────┼────────┼────────┼────────┼────────┐       ┌────────┼────────┼────────┼────────┼────────┼────────┼────────┼────────┤
-     _______ ,_______ ,_______ ,_______ ,_______ ,_______ ,_______ ,_______ ,        _______ ,_______ ,SONG_NEXT,MU_TOGG,_______ ,_______ ,_______ ,_______ ,
+     _______ ,_______ ,_______ ,_______ ,_______ ,_______ ,_______ ,_______ ,        _______ ,_______ ,SONG_NEXT,MU_TOGG,PRINT_WPM,_______ ,_______ ,_______ ,
   //├────────┼────────┼────────┼────────┼────┬───┴────┬───┼────────┼────────┤       ├────────┼────────┼───┬────┴───┬────┼────────┼────────┼────────┼────────┤
      _______ ,_______ ,_______ ,_______ ,     _______ ,    _______ ,_______ ,        _______ ,_______ ,    _______ ,     _______ ,_______ ,_______ ,_______
   //└────────┴────────┴────────┴────────┘    └────────┘   └────────┴────────┘       └────────┴────────┘   └────────┘    └────────┴────────┴────────┴────────┘

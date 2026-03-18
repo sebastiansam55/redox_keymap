@@ -14,6 +14,7 @@ CONSOLE_ENABLE = yes
 
 
 # LTO_ENABLE = yes
+TAP_DANCE_ENABLE = yes
 SPACE_CADET_ENABLE = no
 GRAVE_ESC_ENABLE = no
 MAGIC_ENABLE = no
@@ -22,3 +23,5 @@ MUSIC_ENABLE = yes
 AUDIO_ENABLE = yes
 AUDIO_DRIVER = pwm_hardware
 
+
+WPM_ENABLE = yes
