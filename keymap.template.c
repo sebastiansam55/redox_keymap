@@ -100,14 +100,22 @@ enum layers {
 // HID daemon button aliases — send 0x05 packets to the Python listen daemon.
 // Distinct from QMK's built-in PB_1..PB_32 (QK_PROGRAMMABLE_BUTTON_N) which
 // generate OS-level HID button reports on usage page 0x0C.
-#define HIDB_1 KC_HID_BTN_1 //previous clipboard history entry
-#define HIDB_2 KC_HID_BTN_2 //next clipboard history entry
-#define HIDB_3 KC_HID_BTN_3 //toggle mic mute VisibilityUnobscured
-#define HIDB_4 KC_HID_BTN_4 //run gnome-screenshot
-#define HIDB_5 KC_HID_BTN_5
-#define HIDB_6 KC_HID_BTN_6
-#define HIDB_7 KC_HID_BTN_7
-#define HIDB_8 KC_HID_BTN_8
+#define HIDB_1  KC_HID_BTN_1 //previous clipboard history entry
+#define HIDB_2  KC_HID_BTN_2 //next clipboard history entry
+#define HIDB_3  KC_HID_BTN_3 //toggle mic mute VisibilityUnobscured
+#define HIDB_4  KC_HID_BTN_4 //run gnome-screenshot
+#define HIDB_5  KC_HID_BTN_5
+#define HIDB_6  KC_HID_BTN_6 // case-transform: UPPERCASE
+#define HIDB_7  KC_HID_BTN_7 // case-transform: lowercase
+#define HIDB_8  KC_HID_BTN_8  // case-transform: Sentence case
+#define HIDB_9  KC_HID_BTN_9
+#define HIDB_10 KC_HID_BTN_10
+#define HIDB_11 KC_HID_BTN_11
+#define HIDB_12 KC_HID_BTN_12
+#define HIDB_13 KC_HID_BTN_13
+#define HIDB_14 KC_HID_BTN_14
+#define HIDB_15 KC_HID_BTN_15
+#define HIDB_16 KC_HID_BTN_16
 
 #define KC_ALAS LALT_T(KC_PAST)
 #define KC_CTPL LCTL_T(KC_BSLS)
@@ -149,6 +157,13 @@ void keyboard_post_init_user(void) {
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     if (keycode == TYPCLIP && record->event.pressed) {
         PLAY_SONG(song_list_coin_sound);
+    }
+    // HIDB_6/7/8 are case-transform buttons: copy selection first, then send button packet
+    if (record->event.pressed &&
+        (keycode == HIDB_6 || keycode == HIDB_7 || keycode == HIDB_8)) {
+        PLAY_SONG(song_list_coin_sound);
+        tap_code16(C(KC_C));
+        wait_ms(50);
     }
     if (!process_record_hid_clipboard(keycode, record)) return false;
     switch (keycode) {
@@ -327,7 +342,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   // left interior layer
   [_FN1] = LAYOUT(
   //┌────────┬────────┬────────┬────────┬────────┬────────┐                                           ┌────────┬────────┬────────┬────────┬────────┬────────┐
-     WRAPTK  ,PB_1    ,PB_2    ,_______ ,_______ ,_______ ,                                            _______ ,_______ ,WARP_CTR,WRAPPR  ,_______ ,_______ ,
+     WRAPTK  ,PB_1    ,PB_2    ,HIDB_6  ,HIDB_7  ,HIDB_8  ,                                            _______ ,_______ ,WARP_CTR,WRAPPR  ,_______ ,_______ ,
   //├────────┼────────┼────────┼────────┼────────┼────────┼────────┐                         ┌────────┼────────┼────────┼────────┼────────┼────────┼────────┤
      _______ ,WRAPQU  ,WRAPAG  ,_______ ,HIDB_4  ,_______ ,HIDB_3  ,                          _______ ,_______ ,_______ ,_______ ,_______ ,_______ ,_______ ,
   //├────────┼────────┼────────┼────────┼────────┼────────┼────────┤                         ├────────┼────────┼────────┼────────┼────────┼────────┼────────┤

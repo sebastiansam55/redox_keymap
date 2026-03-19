@@ -5,8 +5,16 @@
     "3": {"action": "shell", "command": "/home/sam/scripts/my_script.sh"},
     "4": {"action": "shell", "command": "playerctl play-pause"},
     "5": {"action": "shell", "command": "playerctl next"},
-    "6": {"action": "shell", "command": "playerctl previous"},
-    "7": {"action": "shell", "command": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+"},
-    "8": {"action": "shell", "command": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"}
+    "6": {"action": "case-transform", "transform": "upper"},
+    "7": {"action": "case-transform", "transform": "lower"},
+    "8": {"action": "case-transform", "transform": "sentence"},
+    "9": {"action": "shell", "command": "notify-send 'Button 9 pressed'"},
+    "10": {"action": "shell", "command": "notify-send 'Button 10 pressed'"},
+    "11": {"action": "shell", "command": "notify-send 'Button 11 pressed'"},
+    "12": {"action": "shell", "command": "notify-send 'Button 12 pressed'"},
+    "13": {"action": "shell", "command": "notify-send 'Button 13 pressed'"},
+    "14": {"action": "shell", "command": "notify-send 'Button 14 pressed'"},
+    "15": {"action": "shell", "command": "notify-send 'Button 15 pressed'"},
+    "16": {"action": "shell", "command": "notify-send 'Button 16 pressed'"}
   }
 }

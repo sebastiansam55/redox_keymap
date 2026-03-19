@@ -28,6 +28,7 @@ import json
 import logging
 import os
 import platform
+import re
 import subprocess
 import sys
 import time
@@ -196,6 +197,24 @@ def read_clipboard() -> str:
     )
 
 
+
+def to_sentence_case(text: str) -> str:
+    """Lowercase everything, then capitalize the first letter of each sentence."""
+    if not text:
+        return text
+    lowered = text.lower()
+    # Capitalize the very first character
+    result = lowered[0].upper() + lowered[1:]
+    # Capitalize the first letter after . ! ? followed by whitespace
+    result = re.sub(
+        r'([.!?]\s+)([a-z])',
+        lambda m: m.group(1) + m.group(2).upper(),
+        result,
+    )
+    return result
+
+
+
 class TypeClipboardCommand(Command):
     """Send clipboard text to the keyboard chunk-by-chunk; keyboard types it out.
 
@@ -322,17 +341,11 @@ class ListenCommand(Command):
     def handle_response(self, data: bytes) -> None:  # pragma: no cover
         raise NotImplementedError
 
-    def _send_clipboard(self, dev: hid.Device, timeout_ms: int) -> None:
-        """Read clipboard and push it to the keyboard as 0x03 chunks."""
-        try:
-            text = read_clipboard()
-        except Exception as exc:
-            print(f"  clipboard read failed: {exc}")
-            return
-
+    def _send_text(self, dev: hid.Device, timeout_ms: int, text: str) -> None:
+        """Push text to the keyboard as 0x03 chunks; keyboard types it via send_string()."""
         encoded = text.encode("ascii", errors="replace")
         if not encoded:
-            print("  clipboard is empty, nothing to send")
+            print("  nothing to send (empty text)")
             return
 
         chunks = [
@@ -362,7 +375,41 @@ class ListenCommand(Command):
                 print(f"  keyboard busy/error on chunk {idx} (status=0x{status:02X})")
                 return
 
-        print("  done — keyboard is typing the clipboard text")
+        print("  done — keyboard is typing the text")
+
+    def _send_clipboard(self, dev: hid.Device, timeout_ms: int) -> None:
+        """Read clipboard and push it to the keyboard as 0x03 chunks."""
+        try:
+            text = read_clipboard()
+        except Exception as exc:
+            print(f"  clipboard read failed: {exc}")
+            return
+        self._send_text(dev, timeout_ms, text)
+
+    def _case_transform(self, dev: hid.Device, timeout_ms: int, transform: str) -> None:
+        """Read clipboard, apply case transform, send result to keyboard to type out.
+
+        The keyboard sent Ctrl+C before firing this button; a brief sleep lets
+        the OS settle so the selection is on the clipboard when we read it.
+        """
+        time.sleep(0.1)
+        try:
+            text = read_clipboard()
+        except Exception as exc:
+            print(f"  clipboard read failed: {exc}", file=sys.stderr)
+            return
+
+        if transform == "upper":
+            result = text.upper()
+        elif transform == "lower":
+            result = text.lower()
+        elif transform == "sentence":
+            result = to_sentence_case(text)
+        else:
+            print(f"  unknown transform {transform!r} (expected upper/lower/sentence)", file=sys.stderr)
+            return
+
+        self._send_text(dev, timeout_ms, result)
 
     def _reconnect(self, device_info: dict, retry_interval: float = 2.0) -> tuple[hid.Device, dict]:
         """Block until the device reappears, then return a new (dev, device_info) pair."""
@@ -413,6 +460,10 @@ class ListenCommand(Command):
                                 cmd = entry.get("command", "")
                                 print(f"[btn {btn_id}] running: {cmd}", file=sys.stderr)
                                 subprocess.Popen(cmd, shell=True)
+                            elif action == "case-transform":
+                                transform = entry.get("transform", "")
+                                print(f"[btn {btn_id}] case-transform: {transform}", file=sys.stderr)
+                                self._case_transform(dev, timeout_ms, transform)
                             else:
                                 print(f"[btn {btn_id}] unknown action: {action}", file=sys.stderr)
                         else:

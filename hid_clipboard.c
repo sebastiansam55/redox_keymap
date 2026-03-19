@@ -207,7 +207,7 @@ void housekeeping_task_hid_clipboard(void) {
  * then types them out.  Returns false when handled, true otherwise.
  */
 bool process_record_hid_clipboard(uint16_t keycode, keyrecord_t *record) {
-    if (keycode >= KC_HID_BTN_1 && keycode <= KC_HID_BTN_8) {
+    if (keycode >= KC_HID_BTN_1 && keycode < HID_CLIPBOARD_SAFE_RANGE) {
         if (record->event.pressed) {
             uint8_t btn_id = keycode - KC_HID_BTN_1 + 1;  /* 1-based */
             uint8_t pkt[RAW_EPSIZE] = {0};

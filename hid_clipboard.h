@@ -104,6 +104,14 @@ enum hid_clipboard_keycodes {
     KC_HID_BTN_6,
     KC_HID_BTN_7,
     KC_HID_BTN_8,
+    KC_HID_BTN_9,
+    KC_HID_BTN_10,
+    KC_HID_BTN_11,
+    KC_HID_BTN_12,
+    KC_HID_BTN_13,
+    KC_HID_BTN_14,
+    KC_HID_BTN_15,
+    KC_HID_BTN_16,
     HID_CLIPBOARD_SAFE_RANGE   /* keymap.c chains its custom codes here */
 };
 #define TYPCLIP KC_TYPE_CLIP
