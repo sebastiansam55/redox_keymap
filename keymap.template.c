@@ -139,6 +139,7 @@ void keyboard_post_init_user(void) {
 
 
 #define WRAP_SEL(open, close)   \
+    PLAY_SONG(song_list_coin_sound); \
     tap_code16(C(KC_C));        \
     wait_ms(50);                \
     SEND_STRING(open);          \
@@ -146,20 +147,26 @@ void keyboard_post_init_user(void) {
     SEND_STRING(close)
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    if (keycode == TYPCLIP && record->event.pressed) {
+        PLAY_SONG(song_list_coin_sound);
+    }
     if (!process_record_hid_clipboard(keycode, record)) return false;
     switch (keycode) {
         case WINTEMP:
             if (record->event.pressed) {
+                PLAY_SONG(song_list_coin_sound);
                 SEND_STRING("\%temp\%");
             }
             break;
         case WINLOCAL:
             if (record->event.pressed) {
+                PLAY_SONG(song_list_coin_sound);
                 SEND_STRING("\%localappdata\%");
             }
             break;
         case WORK2:
             if (record -> event.pressed) {
+                PLAY_SONG(song_list_coin_sound);
                 SEND_STRING("C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319");
                 wait_ms(100);
                 SEND_STRING("\\Temporary ASP.NET Files");
@@ -167,6 +174,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             break;
         case COPYLINE:
             if(record -> event.pressed){
+                PLAY_SONG(song_list_coin_sound);
                 tap_code16(KC_HOME);
                 wait_ms(10);
                 register_code(KC_LSFT);
@@ -182,6 +190,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             break;
         case WRAPQU:
             if (record->event.pressed) {
+                PLAY_SONG(song_list_coin_sound);
                 bool shifted = get_mods() & MOD_MASK_SHIFT;
                 del_mods(MOD_MASK_SHIFT);
                 if (shifted) { WRAP_SEL("\"", "\""); }
@@ -190,15 +199,31 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return false;
         case WRAPBRF:
             if (record->event.pressed) {
+                PLAY_SONG(song_list_coin_sound);
                 bool shifted = get_mods() & MOD_MASK_SHIFT;
                 del_mods(MOD_MASK_SHIFT);
                 if (shifted) { WRAP_SEL("{", "}"); }
                 else         { WRAP_SEL("[", "]"); }
             }
             return false;
-        case WRAPPR: if (record->event.pressed) { WRAP_SEL("(", ")"); } return false;
-        case WRAPTK: if (record->event.pressed) { WRAP_SEL("`", "`"); } return false;
-        case WRAPAG: if (record->event.pressed) { WRAP_SEL("<", ">"); } return false;
+        case WRAPPR: 
+            if (record->event.pressed) { 
+                PLAY_SONG(song_list_coin_sound);
+                WRAP_SEL("(", ")");
+            }
+            return false;
+        case WRAPTK: 
+            if (record->event.pressed) {
+                PLAY_SONG(song_list_coin_sound);
+                WRAP_SEL("`", "`");
+            }
+            return false;
+        case WRAPAG:
+            if (record->event.pressed) {
+                PLAY_SONG(song_list_coin_sound);
+                WRAP_SEL("<", ">");
+            }
+            return false;
         case SONG_NEXT:
             if (record->event.pressed) {
                 switch (song_cycle_index) {
@@ -241,14 +266,16 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return false;
         case WARP_CTR:
             if (record->event.pressed) {
+                PLAY_SONG(song_list_sonic_ring);
                 digitizer_set_position(0.5, 0.5);
             }
-            return false;
+            break;
         case PRINT_WPM:
             if (record->event.pressed) {
+                PLAY_SONG(song_list_coin_sound);
                 uprintf("WPM: %u\n", get_current_wpm());
             }
-            return false;
+            break;
         // %%PRIVATE_CASES%%
     }
     return true;
