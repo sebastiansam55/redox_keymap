@@ -5,3 +5,6 @@ autocorrect_data.h.bak
 
 # Private keycodes and macros — keep off public repo
 private/
+
+#other
+scripts/__pycache__/*
