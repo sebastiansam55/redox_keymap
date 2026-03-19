@@ -4,10 +4,14 @@ Personal QMK firmware keymap for the [Redox rev1](https://github.com/mattdibi/re
 
 ## Features
 
-- **Dvorak base layer** with symbols, numpad, F-keys, mouse keys, and macro layers
+- **Dvorak base layer** with symbols, F-keys, mouse keys, and macro layers
 - **Raw HID clipboard injection** — type clipboard text directly from the keyboard via a host daemon
 - **Autocorrect** — on-device correction of common typos
 - **Dynamic macros** — record and replay keystroke sequences on the fly
+- **Selection wrapping** — wrap selected text in quotes, brackets, parens, backticks, or angle brackets
+- **Song cycling** — cycle through a library of chiptune songs via `SONG_NEXT`
+- **OS-aware media keys** — send Raw HID to the daemon on Linux, native media keycodes on Windows
+- **Cursor warp** — jump mouse pointer to screen center via digitizer (`WARP_CTR`)
 - **Private macro system** — gitignored `private/` snippets injected at build time to keep sensitive strings out of the repo
 
 ## Repository layout
@@ -16,12 +20,16 @@ Personal QMK firmware keymap for the [Redox rev1](https://github.com/mattdibi/re
 keymap.template.c           Public keymap template (markers for private injection)
 keymap.c                    Generated — do not edit directly
 hid_clipboard.c/.h          Raw HID clipboard module (standalone, no community module)
+config.h                    Keyboard config (VID/PID, RGB, audio, etc.)
+halconf.h / mcuconf.h       Hardware abstraction config for Elite-Pi (RP2040)
 rules.mk                    QMK feature flags
+user_song_list.h            Song array declarations for SONG_NEXT cycling
 autocorrect_dictionary.txt  Source for on-device autocorrect
 gen_keymap.py               Injects private/keycodes.inc + private/cases.inc → keymap.c
 build.sh                    One-shot: generate → compile → flash
-qmk_hid_tool.py             Host-side HID tool (ping, echo, type-clipboard, listen)
+qmk_hid_tool.py             Host-side HID tool (ping, echo, raw, type-clipboard, listen)
 qmk_buttons.example.json    Example button action config — copy to ~/.config/qmk_buttons.json
+scripts/                    Helper scripts for use as qmk_buttons.json shell actions
 private/                    Gitignored — personal keycodes and macro strings
 ```
 
@@ -42,8 +50,11 @@ qmk setup
 1. Run `gen_keymap.py` to inject private snippets into `keymap.template.c` → `keymap.c`
 2. Sync source files into `~/git/qmk_firmware/keyboards/redox/keymaps/sebastiansam55/`
 3. Regenerate `autocorrect_data.h` from the dictionary
-4. Compile with `qmk compile`
-5. Flash the resulting `.hex` with `qmk flash`
+4. Compile with `qmk compile -e CONVERT_TO=elite_pi` (produces a `.uf2` file)
+5. Wait for the Elite-Pi to appear as an `RPI-RP2` USB drive, then copy the `.uf2` to it
+6. Restart the `espanso` service
+
+To enter bootloader mode: hold BOOT while plugging in, or tap `QK_BOOT` from the `_COMBO` layer.
 
 To regenerate only the autocorrect header:
 
@@ -61,11 +72,38 @@ For debug output: set `CONSOLE_ENABLE = yes` in `rules.mk` and run `qmk console`
 | Layer | Trigger | Purpose |
 |-------|---------|---------|
 | `_DVORAK` | default | Base layer |
-| `_SYMB` | `SYM_L` (both sides) | Symbols + numpad |
-| `_COMBO` | `KC_CMB` (left outer thumb) | F-keys, mouse keys, cut/copy/paste |
-| `_FN1` | `OSL(_FN1)` (left inner thumb) | Clipboard (`TYPCLIP`), QMK programmable buttons (`PB_1`/`PB_2`) |
-| `_FN2` | `OSL(_FN2)` (right inner thumb) | HID daemon buttons `HIDB_1`–`HIDB_8` (top row) |
-| `_ADJUST` | `LT(_ADJUST, KC_END/KC_LBRC)` | Macros, dynamic macros, media |
+| `_SYMB` | `SYM_L` (both sides) | F1–F12 |
+| `_COMBO` | `KC_CMB` (left outer thumb) | F-keys, mouse keys, clipboard history, cut/copy/paste, `COPYLINE` |
+| `_FN1` | `OSL(_FN1)` (left inner thumb) | Wrap keys, case-transform (`HIDB_6/7/8`), `PB_1`/`PB_2`, `WARP_CTR`, `TYPCLIP` |
+| `_FN2` | `OSL(_FN2)` (right inner thumb) | `HIDB_1`–`HIDB_8`, `SONG_NEXT`, `MU_TOGG`, `CK_TOGG`, `PRINT_WPM` |
+| `_ADJUST` | `LT(_ADJUST, KC_END/KC_LBRC)` | Private macros, dynamic macros (`DM_*`), OS-aware media (`MPLY_OS`, `MPRV_OS`, `MNXT_OS`) |
+
+## Custom keycodes
+
+| Keycode | Description |
+|---------|-------------|
+| `COPYLINE` | Select entire line (Home → Shift+End) then copy |
+| `WRAPQU` | Wrap selection in `''`; shifted wraps in `""` |
+| `WRAPBRF` | Wrap selection in `[]`; shifted wraps in `{}` |
+| `WRAPPR` | Wrap selection in `()` |
+| `WRAPTK` | Wrap selection in ` `` ` |
+| `WRAPAG` | Wrap selection in `<>` |
+| `SONG_NEXT` | Play next song in the cycling list |
+| `PRINT_WPM` | Print current WPM to QMK console |
+| `WARP_CTR` | Move mouse pointer to screen center via digitizer |
+| `MPLY_OS` | Play/pause: `HIDB_5` on Linux, `KC_MPLY` on Windows |
+| `MPRV_OS` | Previous track: `HIDB_9` on Linux, `KC_MPRV` on Windows |
+| `MNXT_OS` | Next track: `HIDB_10` on Linux, `KC_MNXT` on Windows |
+
+Private keycodes (`WINTEMP`, `WINLOCAL`, `WORK1`, `WORK2`, `VM`, `VMx2`, `CALENDLY`, `DOMPWD`, …) are defined in `private/keycodes.inc` and injected at build time.
+
+### Selection wrapping
+
+The `WRAP*` keycodes copy the current selection (`Ctrl+C`), type the opening delimiter, paste (`Ctrl+V`), then type the closing delimiter. A coin-sound chime plays on activation. They live on the `_FN1` layer.
+
+### OS-aware media keys
+
+`MPLY_OS`, `MPRV_OS`, and `MNXT_OS` check `detected_host_os()` at keypress time. On Linux they send a Raw HID `0x05` packet to the daemon (buttons 5, 9, 10 respectively), which runs the configured shell action (e.g. `playerctl play-pause`). On other OSes they fall back to the standard `KC_MPLY`/`KC_MPRV`/`KC_MNXT` keycodes.
 
 ## HID clipboard (`hid_clipboard.c`)
 
@@ -104,7 +142,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 | `0x03` | host → keyboard | Clipboard chunk (chunked text transfer) |
 | `0x03` | keyboard → host | ACK per chunk |
 | `0x04` | keyboard → host | Clipboard request (sent when `TYPCLIP` pressed) |
-| `0x05` | keyboard → host | Programmable button press (`HIDB_1`–`HIDB_8`); byte 1 = button ID (1–8) |
+| `0x05` | keyboard → host | Programmable button press (`HIDB_1`–`HIDB_N`); byte 1 = button ID |
 
 ## Host tool (`qmk_hid_tool.py`)
 
@@ -114,11 +152,12 @@ pip install hidapi
 python qmk_hid_tool.py --list-devices
 python qmk_hid_tool.py --vid 0xXXXX --pid 0xXXXX ping
 python qmk_hid_tool.py --vid 0xXXXX --pid 0xXXXX echo "hello"
+python qmk_hid_tool.py --vid 0xXXXX --pid 0xXXXX raw 01 02 03
 python qmk_hid_tool.py --vid 0xXXXX --pid 0xXXXX type-clipboard
 python qmk_hid_tool.py --vid 0xXXXX --pid 0xXXXX listen   # daemon mode
 ```
 
-**`listen` mode** runs as a background daemon. When `TYPCLIP` is pressed on the keyboard, the keyboard sends a `0x04` request; the daemon reads the host clipboard and streams it back as `0x03` chunks. When a `HIDB_N` key is pressed, the keyboard sends a `0x05` packet; the daemon looks up the button ID in a JSON config and runs the configured shell command.
+**`listen` mode** runs as a background daemon. When `TYPCLIP` is pressed on the keyboard, the keyboard sends a `0x04` request; the daemon reads the host clipboard and streams it back as `0x03` chunks. When a `HIDB_N` key is pressed, the keyboard sends a `0x05` packet; the daemon looks up the button ID in a JSON config and executes the configured action (`shell` command or `case-transform`).
 
 Additional options:
 
@@ -130,7 +169,7 @@ type-clipboard --text "..."   Send literal text instead of clipboard
 type-clipboard --delay MS     Inter-chunk delay
 ```
 
-### Programmable buttons (`HIDB_1`–`HIDB_8`)
+### Programmable buttons (`HIDB_1`–`HIDB_N`)
 
 Copy the example config and edit it to suit:
 
@@ -144,13 +183,26 @@ Config format (`~/.config/qmk_buttons.json`):
 {
   "buttons": {
     "1": {"action": "shell", "command": "notify-send 'Button 1 pressed'"},
-    "2": {"action": "shell", "command": "playerctl play-pause"},
-    "3": {"action": "shell", "command": "/home/sam/scripts/my_script.sh"}
+    "2": {"action": "shell", "command": "playerctl next"},
+    "3": {"action": "shell", "command": "/home/sam/scripts/my_script.sh"},
+    "6": {"action": "case-transform", "transform": "upper"},
+    "7": {"action": "case-transform", "transform": "lower"},
+    "8": {"action": "case-transform", "transform": "sentence"}
   }
 }
 ```
 
-Keys are string button IDs `"1"`–`"8"`. Only buttons with entries do anything; unrecognised button IDs print a warning to stderr and are ignored. The `listen` daemon must be running for button presses to trigger actions.
+Keys are string button IDs. Only buttons with entries do anything; unrecognised button IDs print a warning to stderr and are ignored. The `listen` daemon must be running for button presses to trigger actions.
+
+#### `case-transform` action
+
+When `HIDB_6`/`HIDB_7`/`HIDB_8` are pressed, the firmware automatically sends `Ctrl+C` first (copying the current selection), waits 50 ms, then fires the `0x05` packet. The daemon reads the clipboard, transforms the case, and types the result back via the normal `0x03` chunk protocol.
+
+| Button | Transform | Result |
+|--------|-----------|--------|
+| `HIDB_6` | `"upper"` | UPPERCASE |
+| `HIDB_7` | `"lower"` | lowercase |
+| `HIDB_8` | `"sentence"` | Sentence case (capitalises first letter of each sentence) |
 
 > **Note:** `HIDB_N` (HID daemon buttons) are distinct from QMK's native `PB_N` (`QK_PROGRAMMABLE_BUTTON_N`) keys. `PB_N` generate OS-level HID button reports on usage page 0x0C that the desktop can bind to actions without a daemon. `HIDB_N` send Raw HID `0x05` packets that require the Python `listen` daemon to act on.
 
@@ -229,6 +281,45 @@ systemctl --user import-environment WAYLAND_DISPLAY XDG_RUNTIME_DIR DISPLAY
 
 Then remove the `Environment=WAYLAND_DISPLAY=…` line from the unit file and run
 `systemctl --user daemon-reload`.
+
+## Scripts (`scripts/`)
+
+Helper scripts intended to be wired up as shell actions in `~/.config/qmk_buttons.json`.
+
+### `send_keys.py`
+
+Injects a keypress or key chord into the Linux input subsystem via **uinput**.
+
+```bash
+pip install python-uinput
+```
+
+Requires write access to `/dev/uinput` — add your user to the `input` group and create a udev rule (see `scripts/README.md` for the full setup).
+
+```bash
+python scripts/send_keys.py KEY_PLAYPAUSE
+python scripts/send_keys.py super+l
+python scripts/send_keys.py ctrl+alt+t
+python scripts/send_keys.py --type-string "hello world"
+```
+
+### `type_text.py`
+
+Thin wrapper around `send_keys.py --type-string`. Accepts text as a positional argument or from stdin.
+
+```bash
+python scripts/type_text.py "text to type"
+echo "text" | python scripts/type_text.py
+```
+
+### `paste_text.py`
+
+Copies text to the Wayland clipboard then injects `Ctrl+V` via uinput. Faster than `type_text.py` for long strings and preserves formatting exactly.
+
+```bash
+python scripts/paste_text.py "text to paste"
+echo "text" | python scripts/paste_text.py
+```
 
 ## Private macro system
 
