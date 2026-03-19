@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "hid_clipboard.h"
 #include "print.h"
 #include "digitizer.h"
+#include "os_detection.h"
 
 // Private custom keycodes — injected from private/keycodes.inc at build time.
 // To add your own: create private/keycodes.inc with an enum custom_keycodes block
@@ -36,6 +37,9 @@ enum custom_keycodes {
     SONG_NEXT, /* cycle through user_song_list songs */
     PRINT_WPM, /* print current WPM to QMK console */
     WARP_CTR,  /* warp cursor to center of screen via digitizer */
+    MPLY_OS,   /* KC_MPLY on Windows, HIDB_5  on Linux */
+    MPRV_OS,   /* KC_MPRV on Windows, HIDB_9  on Linux */
+    MNXT_OS,   /* KC_MNXT on Windows, HIDB_10 on Linux */
 // %%PRIVATE_KEYCODES%%
 };
 
@@ -108,8 +112,8 @@ enum layers {
 #define HIDB_6  KC_HID_BTN_6 // case-transform: UPPERCASE
 #define HIDB_7  KC_HID_BTN_7 // case-transform: lowercase
 #define HIDB_8  KC_HID_BTN_8  // case-transform: Sentence case
-#define HIDB_9  KC_HID_BTN_9
-#define HIDB_10 KC_HID_BTN_10
+#define HIDB_9  KC_HID_BTN_9  // media previous track (Linux)
+#define HIDB_10 KC_HID_BTN_10 // media next track (Linux)
 #define HIDB_11 KC_HID_BTN_11
 #define HIDB_12 KC_HID_BTN_12
 #define HIDB_13 KC_HID_BTN_13
@@ -291,6 +295,33 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 uprintf("WPM: %u\n", get_current_wpm());
             }
             break;
+        case MPLY_OS:
+            if (record->event.pressed) {
+                if (detected_host_os() == OS_LINUX) {
+                    process_record_hid_clipboard(HIDB_5, record);
+                } else {
+                    tap_code(KC_MPLY);
+                }
+            }
+            return false;
+        case MNXT_OS:
+            if (record->event.pressed) {
+                if (detected_host_os() == OS_LINUX) {
+                    process_record_hid_clipboard(HIDB_10, record);
+                } else {
+                    tap_code(KC_MNXT);
+                }
+            }
+            return false;
+        case MPRV_OS:
+            if (record->event.pressed) {
+                if (detected_host_os() == OS_LINUX) {
+                    process_record_hid_clipboard(HIDB_9, record);
+                } else {
+                    tap_code(KC_MPRV);
+                }
+            }
+            return false;
         // %%PRIVATE_CASES%%
     }
     return true;
@@ -375,11 +406,11 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   //├────────┼────────┼────────┼────────┼────────┼────────┼────────┐                         ┌────────┼────────┼────────┼────────┼────────┼────────┼────────┤
      XXXXXXX ,VM      ,CALENDLY,VMx2    ,XXXXXXX ,XXXXXXX ,XXXXXXX ,                          XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,
   //├────────┼────────┼────────┼────────┼────────┼────────┼────────┤                         ├────────┼────────┼────────┼────────┼────────┼────────┼────────┤
-     XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,KC_MPLY ,                          XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,
+     XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,MPLY_OS ,                          XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,
   //├────────┼────────┼────────┼────────┼────────┼────────┼────────┼────────┐       ┌────────┼────────┼────────┼────────┼────────┼────────┼────────┼────────┤
      XXXXXXX ,DOMPWD  ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,_______ ,XXXXXXX ,        XXXXXXX ,_______ ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,
   //├────────┼────────┼────────┼────────┼────┬───┴────┬───┼────────┼────────┤       ├────────┼────────┼───┬────┴───┬────┼────────┼────────┼────────┼────────┤
-     XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,     DM_RSTP ,    DM_PLY1 ,DM_PLY2 ,        XXXXXXX ,XXXXXXX ,    XXXXXXX ,     XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX
+     XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,     DM_RSTP ,    DM_PLY1 ,DM_PLY2 ,        XXXXXXX ,XXXXXXX ,    XXXXXXX ,     MPRV_OS ,XXXXXXX ,XXXXXXX ,MNXT_OS
   //└────────┴────────┴────────┴────────┘    └────────┘   └────────┴────────┘       └────────┴────────┘   └────────┘    └────────┴────────┴────────┴────────┘
   )
 };

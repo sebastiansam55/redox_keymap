@@ -25,3 +25,5 @@ AUDIO_DRIVER = pwm_hardware
 
 
 WPM_ENABLE = yes
+
+OS_DETECTION_ENABLE = yes
