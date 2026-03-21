@@ -6,3 +6,4 @@ avialable -> available
 initializiation -> initialization
 implented -> implemented
 discission -> discussion
+receieved -> received
