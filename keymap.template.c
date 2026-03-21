@@ -108,16 +108,16 @@ enum layers {
 #define HIDB_2  KC_HID_BTN_2 //next clipboard history entry
 #define HIDB_3  KC_HID_BTN_3 //toggle mic mute VisibilityUnobscured
 #define HIDB_4  KC_HID_BTN_4 //run gnome-screenshot
-#define HIDB_5  KC_HID_BTN_5
+#define HIDB_5  KC_HID_BTN_5 // media play/pause toggle
 #define HIDB_6  KC_HID_BTN_6 // case-transform: UPPERCASE
 #define HIDB_7  KC_HID_BTN_7 // case-transform: lowercase
 #define HIDB_8  KC_HID_BTN_8  // case-transform: Sentence case
 #define HIDB_9  KC_HID_BTN_9  // media previous track (Linux)
 #define HIDB_10 KC_HID_BTN_10 // media next track (Linux)
-#define HIDB_11 KC_HID_BTN_11
-#define HIDB_12 KC_HID_BTN_12
-#define HIDB_13 KC_HID_BTN_13
-#define HIDB_14 KC_HID_BTN_14
+#define HIDB_11 KC_HID_BTN_11 // warp monitor center 1 (4k)
+#define HIDB_12 KC_HID_BTN_12 // warp monitor center 2 (1440p)
+#define HIDB_13 KC_HID_BTN_13 // warp monitor center 3 (1080p 1)
+#define HIDB_14 KC_HID_BTN_14 // warp monitor center 4 (1080p 2)
 #define HIDB_15 KC_HID_BTN_15
 #define HIDB_16 KC_HID_BTN_16
 
@@ -359,7 +359,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   //left pinky layer
   [_COMBO] = LAYOUT(
   //┌────────┬────────┬────────┬────────┬────────┬────────┐                                                  ┌────────┬────────┬────────┬────────┬────────┬────────┐
-     KC_F1   ,KC_F2   ,KC_F3   ,KC_F4   ,KC_F5   ,KC_F6   ,                                                   _______ ,_______ ,_______ ,_______ ,AC_TOGG,QK_BOOT ,
+     KC_F1   ,KC_F2   ,KC_F3   ,KC_F4   ,KC_F5   ,KC_F6   ,                                                   HIDB_11 ,HIDB_12 ,HIDB_13 ,HIDB_14 ,AC_TOGG ,QK_BOOT ,
   //├────────┼────────┼────────┼────────┼────────┼────────┼────────┐                                ┌────────┼────────┼────────┼────────┼────────┼────────┼────────┤
      KC_F7   ,KC_F8   ,KC_F9   ,KC_F10  ,KC_F11  ,KC_F12  ,_______ ,                                 _______ ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,
   //├────────┼────────┼────────┼────────┼────────┼────────┼────────┤                                ├────────┼────────┼────────┼────────┼────────┼────────┼────────┤
