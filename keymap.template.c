@@ -37,9 +37,9 @@ enum custom_keycodes {
     SONG_NEXT, /* cycle through user_song_list songs */
     PRINT_WPM, /* print current WPM to QMK console */
     WARP_CTR,  /* warp cursor to center of screen via digitizer */
-    MPLY_OS,   /* KC_MPLY on Windows, HIDB_5  on Linux */
-    MPRV_OS,   /* KC_MPRV on Windows, HIDB_9  on Linux */
-    MNXT_OS,   /* KC_MNXT on Windows, HIDB_10 on Linux */
+    MPLY_OS,   /* KC_MPLY on Windows, HID_PLY on Linux */
+    MPRV_OS,   /* KC_MPRV on Windows, HID_PRV on Linux */
+    MNXT_OS,   /* KC_MNXT on Windows, HID_NXT on Linux */
 // %%PRIVATE_KEYCODES%%
 };
 
@@ -104,22 +104,70 @@ enum layers {
 // HID daemon button aliases — send 0x05 packets to the Python listen daemon.
 // Distinct from QMK's built-in PB_1..PB_32 (QK_PROGRAMMABLE_BUTTON_N) which
 // generate OS-level HID button reports on usage page 0x0C.
-#define HIDB_1  KC_HID_BTN_1 //previous clipboard history entry
-#define HIDB_2  KC_HID_BTN_2 //next clipboard history entry
-#define HIDB_3  KC_HID_BTN_3 //toggle mic mute VisibilityUnobscured
-#define HIDB_4  KC_HID_BTN_4 //run gnome-screenshot
-#define HIDB_5  KC_HID_BTN_5 // media play/pause toggle
-#define HIDB_6  KC_HID_BTN_6 // case-transform: UPPERCASE
-#define HIDB_7  KC_HID_BTN_7 // case-transform: lowercase
-#define HIDB_8  KC_HID_BTN_8  // case-transform: Sentence case
-#define HIDB_9  KC_HID_BTN_9  // media previous track (Linux)
-#define HIDB_10 KC_HID_BTN_10 // media next track (Linux)
-#define HIDB_11 KC_HID_BTN_11 // warp monitor center 1 (4k)
-#define HIDB_12 KC_HID_BTN_12 // warp monitor center 2 (1440p)
-#define HIDB_13 KC_HID_BTN_13 // warp monitor center 3 (1080p 1)
-#define HIDB_14 KC_HID_BTN_14 // warp monitor center 4 (1080p 2)
-#define HIDB_15 KC_HID_BTN_15
-#define HIDB_16 KC_HID_BTN_16
+#define CB_PRV  KC_HID_BTN_1  // previous clipboard history entry
+#define CB_NXT  KC_HID_BTN_2  // next clipboard history entry
+#define MIC_TOG KC_HID_BTN_3  // toggle mic mute
+#define ASHOT   KC_HID_BTN_4  // area screenshot (draw zone)
+#define HID_PLY KC_HID_BTN_5  // media play/pause toggle
+#define CASE_UP KC_HID_BTN_6  // case-transform: UPPERCASE
+#define CASE_LO KC_HID_BTN_7  // case-transform: lowercase
+#define CASE_SN KC_HID_BTN_8  // case-transform: Sentence case
+#define HID_PRV KC_HID_BTN_9  // media previous track (Linux)
+#define HID_NXT KC_HID_BTN_10 // media next track (Linux)
+#define WRP_4K  KC_HID_BTN_11 // warp monitor center 1 (4k)
+#define WRP_14  KC_HID_BTN_12 // warp monitor center 2 (1440p)
+#define WRP_11A KC_HID_BTN_13 // warp monitor center 3 (1080p 1)
+#define WRP_11B KC_HID_BTN_14 // warp monitor center 4 (1080p 2)
+#define WRC_TL  KC_HID_BTN_15 // warp current monitor: top-left corner
+#define WRC_TR  KC_HID_BTN_16 // warp current monitor: top-right corner
+#define WRC_BL  KC_HID_BTN_17 // warp current monitor: bottom-left corner
+#define WRC_BR  KC_HID_BTN_18 // warp current monitor: bottom-right corner
+#define HIDB_19 KC_HID_BTN_19
+#define HIDB_20 KC_HID_BTN_20
+#define HIDB_21 KC_HID_BTN_21
+#define HIDB_22 KC_HID_BTN_22
+#define HIDB_23 KC_HID_BTN_23
+#define HIDB_24 KC_HID_BTN_24
+#define HIDB_25 KC_HID_BTN_25
+#define HIDB_26 KC_HID_BTN_26
+#define HIDB_27 KC_HID_BTN_27
+#define HIDB_28 KC_HID_BTN_28
+#define HIDB_29 KC_HID_BTN_29
+#define HIDB_30 KC_HID_BTN_30
+#define HIDB_31 KC_HID_BTN_31
+#define HIDB_32 KC_HID_BTN_32
+#define HIDB_33 KC_HID_BTN_33
+#define HIDB_34 KC_HID_BTN_34
+#define HIDB_35 KC_HID_BTN_35
+#define HIDB_36 KC_HID_BTN_36
+#define HIDB_37 KC_HID_BTN_37
+#define HIDB_38 KC_HID_BTN_38
+#define HIDB_39 KC_HID_BTN_39
+#define HIDB_40 KC_HID_BTN_40
+#define HIDB_41 KC_HID_BTN_41
+#define HIDB_42 KC_HID_BTN_42
+#define HIDB_43 KC_HID_BTN_43
+#define HIDB_44 KC_HID_BTN_44
+#define HIDB_45 KC_HID_BTN_45
+#define HIDB_46 KC_HID_BTN_46
+#define HIDB_47 KC_HID_BTN_47
+#define HIDB_48 KC_HID_BTN_48
+#define HIDB_49 KC_HID_BTN_49
+#define HIDB_50 KC_HID_BTN_50
+#define HIDB_51 KC_HID_BTN_51
+#define HIDB_52 KC_HID_BTN_52
+#define HIDB_53 KC_HID_BTN_53
+#define HIDB_54 KC_HID_BTN_54
+#define HIDB_55 KC_HID_BTN_55
+#define HIDB_56 KC_HID_BTN_56
+#define HIDB_57 KC_HID_BTN_57
+#define HIDB_58 KC_HID_BTN_58
+#define HIDB_59 KC_HID_BTN_59
+#define HIDB_60 KC_HID_BTN_60
+#define HIDB_61 KC_HID_BTN_61
+#define HIDB_62 KC_HID_BTN_62
+#define HIDB_63 KC_HID_BTN_63
+#define HIDB_64 KC_HID_BTN_64
 
 #define KC_ALAS LALT_T(KC_PAST)
 #define KC_CTPL LCTL_T(KC_BSLS)
@@ -162,12 +210,27 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     if (keycode == TYPCLIP && record->event.pressed) {
         PLAY_SONG(song_list_coin_sound);
     }
-    // HIDB_6/7/8 are case-transform buttons: copy selection first, then send button packet
+    // CASE_UP/LO/SN are case-transform buttons: copy selection first, then send button packet
     if (record->event.pressed &&
-        (keycode == HIDB_6 || keycode == HIDB_7 || keycode == HIDB_8)) {
+        (keycode == CASE_UP || keycode == CASE_LO || keycode == CASE_SN)) {
         PLAY_SONG(song_list_coin_sound);
         tap_code16(C(KC_C));
         wait_ms(50);
+    }
+    // WRP_* with shift held sends a corner warp key for the current monitor instead
+    if (record->event.pressed &&
+        (keycode == WRP_4K || keycode == WRP_14 || keycode == WRP_11A || keycode == WRP_11B) &&
+        (get_mods() & MOD_MASK_SHIFT)) {
+        uint16_t corner_key;
+        switch (keycode) {
+            case WRP_4K:  corner_key = WRC_TL; break;
+            case WRP_14:  corner_key = WRC_TR; break;
+            case WRP_11A: corner_key = WRC_BL; break;
+            case WRP_11B: corner_key = WRC_BR; break;
+            default:      return true;
+        }
+        process_record_hid_clipboard(corner_key, record);
+        return false;
     }
     if (!process_record_hid_clipboard(keycode, record)) return false;
     switch (keycode) {
@@ -298,7 +361,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case MPLY_OS:
             if (record->event.pressed) {
                 if (detected_host_os() == OS_LINUX) {
-                    process_record_hid_clipboard(HIDB_5, record);
+                    process_record_hid_clipboard(HID_PLY, record);
                 } else {
                     tap_code(KC_MPLY);
                 }
@@ -307,7 +370,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case MNXT_OS:
             if (record->event.pressed) {
                 if (detected_host_os() == OS_LINUX) {
-                    process_record_hid_clipboard(HIDB_10, record);
+                    process_record_hid_clipboard(HID_NXT, record);
                 } else {
                     tap_code(KC_MNXT);
                 }
@@ -316,7 +379,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case MPRV_OS:
             if (record->event.pressed) {
                 if (detected_host_os() == OS_LINUX) {
-                    process_record_hid_clipboard(HIDB_9, record);
+                    process_record_hid_clipboard(HID_PRV, record);
                 } else {
                     tap_code(KC_MPRV);
                 }
@@ -359,13 +422,13 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   //left pinky layer
   [_COMBO] = LAYOUT(
   //┌────────┬────────┬────────┬────────┬────────┬────────┐                                                  ┌────────┬────────┬────────┬────────┬────────┬────────┐
-     KC_F1   ,KC_F2   ,KC_F3   ,KC_F4   ,KC_F5   ,KC_F6   ,                                                   HIDB_11 ,HIDB_12 ,HIDB_13 ,HIDB_14 ,AC_TOGG ,QK_BOOT ,
+     KC_F1   ,KC_F2   ,KC_F3   ,KC_F4   ,KC_F5   ,KC_F6   ,                                                   WRP_4K  ,WRP_14  ,WRP_11A ,WRP_11B ,AC_TOGG ,QK_BOOT ,
   //├────────┼────────┼────────┼────────┼────────┼────────┼────────┐                                ┌────────┼────────┼────────┼────────┼────────┼────────┼────────┤
      KC_F7   ,KC_F8   ,KC_F9   ,KC_F10  ,KC_F11  ,KC_F12  ,_______ ,                                 _______ ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,
   //├────────┼────────┼────────┼────────┼────────┼────────┼────────┤                                ├────────┼────────┼────────┼────────┼────────┼────────┼────────┤
      XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,COPYLINE,                                 _______ ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,
   //├────────┼────────┼────────┼────────┼────────┼────────┼────────┼────────┐              ┌────────┼────────┼────────┼────────┼────────┼────────┼────────┼────────┤
-     _______ ,KC_F5   , KC_F12 ,XXXXXXX ,XXXXXXX ,XXXXXXX ,HIDB_2 , HIDB_1,                 KC_PGUP ,KC_PGDN ,XXXXXXX ,XXXXXXX ,MS_WHLL, MS_WHLD ,MS_WHLU, MS_WHLR ,
+     _______ ,KC_F5   , KC_F12 ,XXXXXXX ,XXXXXXX ,XXXXXXX ,CB_NXT , CB_PRV,                 KC_PGUP ,KC_PGDN ,XXXXXXX ,XXXXXXX ,MS_WHLL, MS_WHLD ,MS_WHLU, MS_WHLR ,
   //├────────┼────────┼────────┼────────┼────┬───┴────┬───┼────────┼────────┤              ├────────┼────────┼───┬────┴───┬────┼────────┼────────┼────────┼────────┤
      XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,   LCTL(KC_X),LCTL(KC_C),LCTL(KC_V),               MS_BTN1 ,MS_BTN2,     MS_BTN3 ,     MS_LEFT ,MS_DOWN ,MS_UP   ,MS_RGHT
   //└────────┴────────┴────────┴────────┘    └────────┘   └────────┴────────┘              └────────┴────────┘   └────────┘    └────────┴────────┴────────┴────────┘
@@ -373,9 +436,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   // left interior layer
   [_FN1] = LAYOUT(
   //┌────────┬────────┬────────┬────────┬────────┬────────┐                                           ┌────────┬────────┬────────┬────────┬────────┬────────┐
-     WRAPTK  ,PB_1    ,PB_2    ,HIDB_6  ,HIDB_7  ,HIDB_8  ,                                            _______ ,_______ ,WARP_CTR,WRAPPR  ,_______ ,_______ ,
+     WRAPTK  ,PB_1    ,PB_2    ,CASE_UP ,CASE_LO ,CASE_SN ,                                            _______ ,_______ ,WARP_CTR,WRAPPR  ,_______ ,_______ ,
   //├────────┼────────┼────────┼────────┼────────┼────────┼────────┐                         ┌────────┼────────┼────────┼────────┼────────┼────────┼────────┤
-     _______ ,WRAPQU  ,WRAPAG  ,_______ ,HIDB_4  ,_______ ,HIDB_3  ,                          _______ ,_______ ,_______ ,_______ ,_______ ,_______ ,_______ ,
+     _______ ,WRAPQU  ,WRAPAG  ,_______ ,ASHOT   ,_______ ,MIC_TOG ,                          _______ ,_______ ,_______ ,_______ ,_______ ,_______ ,_______ ,
   //├────────┼────────┼────────┼────────┼────────┼────────┼────────┤                         ├────────┼────────┼────────┼────────┼────────┼────────┼────────┤
      _______ ,_______ ,_______ ,_______ ,_______ ,_______ ,OSL(_FN1),                        OSL(_FN2),_______ ,_______ ,_______ ,_______ ,_______ ,_______ ,
   //├────────┼────────┼────────┼────────┼────────┼────────┼────────┼────────┐       ┌────────┼────────┼────────┼────────┼────────┼────────┼────────┼────────┤
@@ -387,7 +450,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   // right interior layer — HIDB_N keys send Raw HID 0x05 packets to the Python daemon
   [_FN2] = LAYOUT(
   //┌────────┬────────┬────────┬────────┬────────┬────────┐                                           ┌────────┬────────┬────────┬────────┬────────┬────────┐
-     _______ ,HIDB_1  ,HIDB_2  ,HIDB_3  ,HIDB_4  ,_______ ,                                            _______ ,HIDB_5  ,HIDB_6  ,HIDB_7  ,HIDB_8  ,_______ ,
+     _______ ,CB_PRV  ,CB_NXT  ,MIC_TOG ,ASHOT   ,_______ ,                                            _______ ,HID_PLY ,CASE_UP ,CASE_LO ,CASE_SN ,_______ ,
   //├────────┼────────┼────────┼────────┼────────┼────────┼────────┐                         ┌────────┼────────┼────────┼────────┼────────┼────────┼────────┤
      _______ ,_______ ,_______ ,_______ ,_______ ,_______ ,_______ ,                          _______ ,_______ ,_______ ,CK_TOGG ,_______ ,_______ ,_______ ,
   //├────────┼────────┼────────┼────────┼────────┼────────┼────────┤                         ├────────┼────────┼────────┼────────┼────────┼────────┼────────┤
