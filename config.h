@@ -1,5 +1,12 @@
 #define HID_CLIP_INTER_CHUNK_DELAY_MS 50
 
+// Tapping term for Tap Dance, LT, etc. (default is 200)
+#define TAPPING_TERM 400
+
+// Leader key
+#define LEADER_TIMEOUT 400
+#define LEADER_PER_KEY_TIMING
+
 // RGB underglow on by default
 // #define RGBLIGHT_DEFAULT_ON true
 // #define RGBLIGHT_DEFAULT_MODE RGBLIGHT_MODE_STATIC_LIGHT

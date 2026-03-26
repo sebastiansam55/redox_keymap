@@ -390,6 +390,46 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     return true;
 }
 
+void leader_end_user(void) {
+    // git shortcuts
+    if (leader_sequence_two_keys(KC_G, KC_S)) {
+        SEND_STRING("git status\n");
+    } else if (leader_sequence_two_keys(KC_G, KC_A)) {
+        SEND_STRING("git add -p\n");
+    } else if (leader_sequence_two_keys(KC_G, KC_C)) {
+        SEND_STRING("git commit\n");
+    } else if (leader_sequence_two_keys(KC_G, KC_D)) {
+        SEND_STRING("git diff\n");
+    } else if (leader_sequence_two_keys(KC_G, KC_P)) {
+        SEND_STRING("git push\n");
+    } else if (leader_sequence_two_keys(KC_G, KC_L)) {
+        SEND_STRING("git log --oneline\n");
+    } else if (leader_sequence_two_keys(KC_G, KC_B)) {
+        SEND_STRING("git branch\n");
+    } else if (leader_sequence_two_keys(KC_G, KC_Z)) {
+        SEND_STRING("git stash\n");
+    } else if (leader_sequence_two_keys(KC_G, KC_R)) {
+        SEND_STRING("git rebase -i HEAD~");  // user types count
+    // shell shortcuts
+    } else if (leader_sequence_two_keys(KC_L, KC_S)) {
+        SEND_STRING("ls -la\n");
+    } else if (leader_sequence_two_keys(KC_M, KC_K)) {
+        SEND_STRING("make\n");
+    } else if (leader_sequence_three_keys(KC_C, KC_D, KC_1)) {
+        SEND_STRING("cd ../\n");
+    } else if (leader_sequence_three_keys(KC_C, KC_D, KC_2)) {
+        SEND_STRING("cd ../../\n");
+    } else if (leader_sequence_three_keys(KC_C, KC_D, KC_3)) {
+        SEND_STRING("cd ../../../\n");
+    } else if (leader_sequence_three_keys(KC_C, KC_D, KC_4)) {
+        SEND_STRING("cd ../../../../\n");
+    } else if (leader_sequence_three_keys(KC_C, KC_D, KC_5)) {
+        SEND_STRING("cd ../../../../../\n");
+    } else if (leader_sequence_two_keys(KC_C, KC_D)) {
+        SEND_STRING("cd ../\n");
+    }
+}
+
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
   [_DVORAK] = LAYOUT(
@@ -400,7 +440,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   //├────────┼────────┼────────┼────────┼────────┼────────┼────────┤                         ├────────┼────────┼────────┼────────┼────────┼────────┼────────┤
      TD(TD_ESC),KC_A    ,KC_O    ,KC_E    ,KC_U    ,KC_I    ,OSL(_FN1),                        OSL(_FN2),KC_D    ,KC_H    ,KC_T    ,KC_N    ,KC_S    ,KC_SLSH ,
   //├────────┼────────┼────────┼────────┼────────┼────────┼────────┼────────┐       ┌────────┼────────┼────────┼────────┼────────┼────────┼────────┼────────┤
-     KC_LSFT ,KC_SCLN ,KC_Q    ,KC_J    ,KC_K    ,KC_X    ,KC_HOME ,KC_ADEN ,       KC_ADLBR ,KC_RBRC ,KC_B    ,KC_M    ,KC_W    ,KC_V    ,KC_Z    ,KC_NO   ,
+     KC_LSFT ,KC_SCLN ,KC_Q    ,KC_J    ,KC_K    ,KC_X    ,KC_HOME ,KC_ADEN ,       KC_ADLBR ,KC_RBRC ,KC_B    ,KC_M    ,KC_W    ,KC_V    ,KC_Z    ,QK_LEAD ,
   //├────────┼────────┼────────┼────────┼────┬───┴────┬───┼────────┼────────┤       ├────────┼────────┼───┬────┴───┬────┼────────┼────────┼────────┼────────┤
      KC_CMB  ,KC_LCTL ,KC_LGUI ,KC_LALT ,     KC_EQL  ,    KC_SPC  ,KC_BSPC ,        KC_DEL  ,KC_ENT  ,    KC_MINS ,     KC_LEFT ,KC_DOWN ,KC_UP   ,KC_RGHT
   //└────────┴────────┴────────┴────────┘    └────────┘   └────────┴────────┘       └────────┴────────┘   └────────┘    └────────┴────────┴────────┴────────┘
@@ -430,7 +470,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   //├────────┼────────┼────────┼────────┼────────┼────────┼────────┼────────┐              ┌────────┼────────┼────────┼────────┼────────┼────────┼────────┼────────┤
      _______ ,KC_F5   , KC_F12 ,XXXXXXX ,XXXXXXX ,XXXXXXX ,CB_NXT , CB_PRV,                 KC_PGUP ,KC_PGDN ,XXXXXXX ,XXXXXXX ,MS_WHLL, MS_WHLD ,MS_WHLU, MS_WHLR ,
   //├────────┼────────┼────────┼────────┼────┬───┴────┬───┼────────┼────────┤              ├────────┼────────┼───┬────┴───┬────┼────────┼────────┼────────┼────────┤
-     XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,   LCTL(KC_X),LCTL(KC_C),LCTL(KC_V),               MS_BTN1 ,MS_BTN2,     MS_BTN3 ,     MS_LEFT ,MS_DOWN ,MS_UP   ,MS_RGHT
+     XXXXXXX ,_______ ,_______ ,_______ ,   LCTL(KC_X),LCTL(KC_C),LCTL(KC_V),               MS_BTN1 ,MS_BTN2,     MS_BTN3 ,     MS_LEFT ,MS_DOWN ,MS_UP   ,MS_RGHT
   //└────────┴────────┴────────┴────────┘    └────────┘   └────────┴────────┘              └────────┴────────┘   └────────┘    └────────┴────────┴────────┴────────┘
   ),
   // left interior layer
@@ -473,7 +513,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   //├────────┼────────┼────────┼────────┼────────┼────────┼────────┼────────┐       ┌────────┼────────┼────────┼────────┼────────┼────────┼────────┼────────┤
      XXXXXXX ,DOMPWD  ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,_______ ,XXXXXXX ,        XXXXXXX ,_______ ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,
   //├────────┼────────┼────────┼────────┼────┬───┴────┬───┼────────┼────────┤       ├────────┼────────┼───┬────┴───┬────┼────────┼────────┼────────┼────────┤
-     XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,     DM_RSTP ,    DM_PLY1 ,DM_PLY2 ,        XXXXXXX ,XXXXXXX ,    XXXXXXX ,     MPRV_OS ,XXXXXXX ,XXXXXXX ,MNXT_OS
+     XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,     DM_RSTP ,    DM_PLY1 ,DM_PLY2 ,        XXXXXXX ,XXXXXXX ,    XXXXXXX ,     MPRV_OS ,KC_VOLD ,KC_VOLU ,MNXT_OS
   //└────────┴────────┴────────┴────────┘    └────────┘   └────────┴────────┘       └────────┴────────┘   └────────┘    └────────┴────────┴────────┴────────┘
   )
 };
