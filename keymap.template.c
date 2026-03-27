@@ -40,6 +40,8 @@ enum custom_keycodes {
     MPLY_OS,   /* KC_MPLY on Windows, HID_PLY on Linux */
     MPRV_OS,   /* KC_MPRV on Windows, HID_PRV on Linux */
     MNXT_OS,   /* KC_MNXT on Windows, HID_NXT on Linux */
+    VOLD_OS,   /* KC_VOLD on Windows, HID_VLD on Linux */
+    VOLU_OS,   /* KC_VOLU on Windows, HID_VLU on Linux */
 // %%PRIVATE_KEYCODES%%
 };
 
@@ -122,8 +124,8 @@ enum layers {
 #define WRC_TR  KC_HID_BTN_16 // warp current monitor: top-right corner
 #define WRC_BL  KC_HID_BTN_17 // warp current monitor: bottom-left corner
 #define WRC_BR  KC_HID_BTN_18 // warp current monitor: bottom-right corner
-#define HIDB_19 KC_HID_BTN_19
-#define HIDB_20 KC_HID_BTN_20
+#define HID_VLD KC_HID_BTN_19 // volume down (Linux)
+#define HID_VLU KC_HID_BTN_20 // volume up (Linux)
 #define HIDB_21 KC_HID_BTN_21
 #define HIDB_22 KC_HID_BTN_22
 #define HIDB_23 KC_HID_BTN_23
@@ -385,6 +387,24 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 }
             }
             return false;
+        case VOLD_OS:
+            if (record->event.pressed) {
+                if (detected_host_os() == OS_LINUX) {
+                    process_record_hid_clipboard(HID_VLD, record);
+                } else {
+                    tap_code(KC_VOLD);
+                }
+            }
+            return false;
+        case VOLU_OS:
+            if (record->event.pressed) {
+                if (detected_host_os() == OS_LINUX) {
+                    process_record_hid_clipboard(HID_VLU, record);
+                } else {
+                    tap_code(KC_VOLU);
+                }
+            }
+            return false;
         // %%PRIVATE_CASES%%
     }
     return true;
@@ -513,7 +533,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   //├────────┼────────┼────────┼────────┼────────┼────────┼────────┼────────┐       ┌────────┼────────┼────────┼────────┼────────┼────────┼────────┼────────┤
      XXXXXXX ,DOMPWD  ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,_______ ,XXXXXXX ,        XXXXXXX ,_______ ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,
   //├────────┼────────┼────────┼────────┼────┬───┴────┬───┼────────┼────────┤       ├────────┼────────┼───┬────┴───┬────┼────────┼────────┼────────┼────────┤
-     XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,     DM_RSTP ,    DM_PLY1 ,DM_PLY2 ,        XXXXXXX ,XXXXXXX ,    XXXXXXX ,     MPRV_OS ,KC_VOLD ,KC_VOLU ,MNXT_OS
+     XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,     DM_RSTP ,    DM_PLY1 ,DM_PLY2 ,        XXXXXXX ,XXXXXXX ,    XXXXXXX ,     MPRV_OS ,VOLD_OS ,VOLU_OS ,MNXT_OS
   //└────────┴────────┴────────┴────────┘    └────────┘   └────────┴────────┘       └────────┴────────┘   └────────┘    └────────┴────────┴────────┴────────┘
   )
 };
