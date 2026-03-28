@@ -20,6 +20,11 @@ static uint8_t hid_clip_stream_len     = 0;
 static uint8_t hid_clip_stream_ack_idx = 0;   /* chunk_index to echo in deferred ACK */
 static bool    hid_clip_stream_ready   = false; /* chunk staged, waiting for housekeeping */
 
+/* Button repeat state */
+static uint64_t hid_btn_held_mask    = 0;     /* bit (btn_id-1) set while key held */
+static uint32_t hid_btn_repeat_timer = 0;
+static bool     hid_btn_in_delay     = false; /* true = waiting for initial delay */
+
 /* -- Public API ------------------------------------------------------------ */
 
 const char *hid_clipboard_get_text(void) { return hid_clip_buf; }
@@ -139,6 +144,25 @@ void raw_hid_receive_hid_clipboard(uint8_t *data, uint8_t length) {
  * Types out the buffered text once hid_clip_ready is signalled.
  */
 void housekeeping_task_hid_clipboard(void) {
+    /* -- Button repeat -- */
+    if (hid_btn_held_mask != 0) {
+        uint32_t threshold = hid_btn_in_delay
+                             ? HID_BTN_REPEAT_DELAY_MS
+                             : HID_BTN_REPEAT_RATE_MS;
+        if (timer_elapsed32(hid_btn_repeat_timer) >= threshold) {
+            hid_btn_repeat_timer = timer_read32();
+            hid_btn_in_delay     = false;
+            for (uint8_t i = 0; i < 64; i++) {
+                if (hid_btn_held_mask & ((uint64_t)1 << i)) {
+                    uint8_t pkt[RAW_EPSIZE] = {0};
+                    pkt[0] = HID_CMD_BUTTON;
+                    pkt[1] = i + 1;
+                    raw_hid_send(pkt, RAW_EPSIZE);
+                }
+            }
+        }
+    }
+
     /* -- Streaming path: type chunk, then send deferred ACK -- */
     if (hid_clip_stream_ready && !hid_clip_typing) {
         /*
@@ -208,13 +232,23 @@ void housekeeping_task_hid_clipboard(void) {
  */
 bool process_record_hid_clipboard(uint16_t keycode, keyrecord_t *record) {
     if (keycode >= KC_HID_BTN_1 && keycode < HID_CLIPBOARD_SAFE_RANGE) {
+        uint8_t  btn_id  = keycode - KC_HID_BTN_1 + 1;  /* 1-based */
+        uint64_t btn_bit = (uint64_t)1 << (btn_id - 1);
+
         if (record->event.pressed) {
-            uint8_t btn_id = keycode - KC_HID_BTN_1 + 1;  /* 1-based */
             uint8_t pkt[RAW_EPSIZE] = {0};
             pkt[0] = HID_CMD_BUTTON;
             pkt[1] = btn_id;
             dprintf("hid_clipboard: button %u pressed, sending HID_CMD_BUTTON\n", btn_id);
             raw_hid_send(pkt, RAW_EPSIZE);
+
+            if (HID_BTN_REPEAT_MASK & btn_bit) {
+                hid_btn_held_mask   |= btn_bit;
+                hid_btn_repeat_timer = timer_read32();
+                hid_btn_in_delay     = true;
+            }
+        } else {
+            hid_btn_held_mask &= ~btn_bit;
         }
         return false;
     }

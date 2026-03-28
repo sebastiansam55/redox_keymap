@@ -93,6 +93,23 @@
 #  define HID_CLIP_INTER_CHUNK_DELAY_MS 0
 #endif
 
+/* Bitmask of which HID buttons repeat while held.
+ * Bit 0 = KC_HID_BTN_1, bit 1 = KC_HID_BTN_2, etc.
+ * Default: no buttons repeat.
+ * Override in config.h: #define HID_BTN_REPEAT_MASK ((1ULL<<0)|(1ULL<<2))
+ */
+#ifndef HID_BTN_REPEAT_MASK
+#  define HID_BTN_REPEAT_MASK  ((uint64_t)0)
+#endif
+/* Initial delay before first repeat fires (ms) */
+#ifndef HID_BTN_REPEAT_DELAY_MS
+#  define HID_BTN_REPEAT_DELAY_MS  500
+#endif
+/* Interval between repeat signals (ms) */
+#ifndef HID_BTN_REPEAT_RATE_MS
+#  define HID_BTN_REPEAT_RATE_MS   100
+#endif
+
 /* Custom keycodes — chain from SAFE_RANGE so keymap.c can use HID_CLIPBOARD_SAFE_RANGE */
 enum hid_clipboard_keycodes {
     KC_TYPE_CLIP = SAFE_RANGE,
