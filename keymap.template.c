@@ -97,7 +97,8 @@ enum layers {
    _COMBO,
    _ADJUST,
    _FN1,
-   _FN2
+   _FN2,
+   _CMB_GUI
 };
 
 // Shortcut to make keymap more readable
@@ -126,21 +127,21 @@ enum layers {
 #define WRC_BR  KC_HID_BTN_18 // warp current monitor: bottom-right corner
 #define HID_VLD KC_HID_BTN_19 // volume down (Linux)
 #define HID_VLU KC_HID_BTN_20 // volume up (Linux)
-#define HIDB_21 KC_HID_BTN_21
-#define HIDB_22 KC_HID_BTN_22
-#define HIDB_23 KC_HID_BTN_23
-#define HIDB_24 KC_HID_BTN_24
+#define HIDB_21 KC_HID_BTN_21 // warp active to monitor 4kmon
+#define HIDB_22 KC_HID_BTN_22 // warp active to monitor 1440p
+#define HIDB_23 KC_HID_BTN_23 // warp active to monitor 
+#define HIDB_24 KC_HID_BTN_24 // warp active to monitor
 #define HIDB_25 KC_HID_BTN_25
 #define HIDB_26 KC_HID_BTN_26
 #define HIDB_27 KC_HID_BTN_27
 #define HIDB_28 KC_HID_BTN_28
 #define HIDB_29 KC_HID_BTN_29
 #define HIDB_30 KC_HID_BTN_30
-#define HIDB_31 KC_HID_BTN_31
-#define HIDB_32 KC_HID_BTN_32
-#define HIDB_33 KC_HID_BTN_33
-#define HIDB_34 KC_HID_BTN_34
-#define HIDB_35 KC_HID_BTN_35
+#define HIDB_31 KC_HID_BTN_31 // activate google chat
+#define HIDB_32 KC_HID_BTN_32 // relative move left
+#define HIDB_33 KC_HID_BTN_33 // relative move down
+#define HIDB_34 KC_HID_BTN_34 // relative move up
+#define HIDB_35 KC_HID_BTN_35 // relavite move right
 #define HIDB_36 KC_HID_BTN_36
 #define HIDB_37 KC_HID_BTN_37
 #define HIDB_38 KC_HID_BTN_38
@@ -490,7 +491,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   //├────────┼────────┼────────┼────────┼────────┼────────┼────────┼────────┐              ┌────────┼────────┼────────┼────────┼────────┼────────┼────────┼────────┤
      _______ ,KC_F5   , KC_F12 ,XXXXXXX ,XXXXXXX ,XXXXXXX ,CB_NXT , CB_PRV,                 KC_PGUP ,KC_PGDN ,XXXXXXX ,XXXXXXX ,MS_WHLL, MS_WHLD ,MS_WHLU, MS_WHLR ,
   //├────────┼────────┼────────┼────────┼────┬───┴────┬───┼────────┼────────┤              ├────────┼────────┼───┬────┴───┬────┼────────┼────────┼────────┼────────┤
-     XXXXXXX ,_______ ,_______ ,_______ ,   LCTL(KC_X),LCTL(KC_C),LCTL(KC_V),               MS_BTN1 ,MS_BTN2,     MS_BTN3 ,     MS_LEFT ,MS_DOWN ,MS_UP   ,MS_RGHT
+     XXXXXXX ,_______ ,MO(_CMB_GUI),_______ ,   LCTL(KC_X),LCTL(KC_C),LCTL(KC_V),               MS_BTN1 ,MS_BTN2,     MS_BTN3 ,     MS_LEFT ,MS_DOWN ,MS_UP   ,MS_RGHT
   //└────────┴────────┴────────┴────────┘    └────────┘   └────────┴────────┘              └────────┴────────┘   └────────┘    └────────┴────────┴────────┴────────┘
   ),
   // left interior layer
@@ -534,6 +535,21 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
      XXXXXXX ,DOMPWD  ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,_______ ,XXXXXXX ,        XXXXXXX ,_______ ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,
   //├────────┼────────┼────────┼────────┼────┬───┴────┬───┼────────┼────────┤       ├────────┼────────┼───┬────┴───┬────┼────────┼────────┼────────┼────────┤
      XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,     DM_RSTP ,    DM_PLY1 ,DM_PLY2 ,        XXXXXXX ,XXXXXXX ,    XXXXXXX ,     MPRV_OS ,VOLD_OS ,VOLU_OS ,MNXT_OS
+  //└────────┴────────┴────────┴────────┘    └────────┘   └────────┴────────┘       └────────┴────────┘   └────────┘    └────────┴────────┴────────┴────────┘
+  ),
+
+  // left pinky + super
+  [_CMB_GUI] = LAYOUT(
+  //┌────────┬────────┬────────┬────────┬────────┬────────┐                                           ┌────────┬────────┬────────┬────────┬────────┬────────┐
+     XXXXXXX ,HIDB_21 ,HIDB_22 ,HIDB_23 ,HIDB_24 ,HIDB_25 ,                                            HIDB_26 ,HIDB_27 ,HIDB_28 ,HIDB_29 ,HIDB_30 ,XXXXXXX ,
+  //├────────┼────────┼────────┼────────┼────────┼────────┼────────┐                         ┌────────┼────────┼────────┼────────┼────────┼────────┼────────┤
+     XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,                          XXXXXXX ,XXXXXXX ,XXXXXXX ,HIDB_31 ,XXXXXXX ,XXXXXXX ,XXXXXXX ,
+  //├────────┼────────┼────────┼────────┼────────┼────────┼────────┤                         ├────────┼────────┼────────┼────────┼────────┼────────┼────────┤
+     XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,                          XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,
+  //├────────┼────────┼────────┼────────┼────────┼────────┼────────┼────────┐       ┌────────┼────────┼────────┼────────┼────────┼────────┼────────┼────────┤
+     XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,        XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,
+  //├────────┼────────┼────────┼────────┼────┬───┴────┬───┼────────┼────────┤       ├────────┼────────┼───┬────┴───┬────┼────────┼────────┼────────┼────────┤
+     XXXXXXX ,XXXXXXX ,_______ ,XXXXXXX ,     XXXXXXX ,    XXXXXXX ,XXXXXXX ,        XXXXXXX ,XXXXXXX ,    XXXXXXX ,     HIDB_32 ,HIDB_33 ,HIDB_34 ,HIDB_35
   //└────────┴────────┴────────┴────────┘    └────────┘   └────────┴────────┘       └────────┴────────┘   └────────┘    └────────┴────────┴────────┴────────┘
   )
 };
