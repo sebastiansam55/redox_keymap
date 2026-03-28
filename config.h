@@ -31,5 +31,5 @@
 #define AUDIO_CLICKY
 
 #ifdef AUDIO_ENABLE
-  #define STARTUP_SONG SONG(PLANCK_SOUND)
+  #define STARTUP_SONG SONG(E1M1_DOOM);
 #endif
