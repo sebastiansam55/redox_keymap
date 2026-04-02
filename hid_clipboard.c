@@ -155,8 +155,10 @@ void housekeeping_task_hid_clipboard(void) {
             for (uint8_t i = 0; i < 64; i++) {
                 if (hid_btn_held_mask & ((uint64_t)1 << i)) {
                     uint8_t pkt[RAW_EPSIZE] = {0};
+                    uint16_t id = i + 1;
                     pkt[0] = HID_CMD_BUTTON;
-                    pkt[1] = i + 1;
+                    pkt[1] = (uint8_t)(id & 0xFF);
+                    pkt[2] = (uint8_t)(id >> 8);
                     raw_hid_send(pkt, RAW_EPSIZE);
                 }
             }
@@ -232,13 +234,14 @@ void housekeeping_task_hid_clipboard(void) {
  */
 bool process_record_hid_clipboard(uint16_t keycode, keyrecord_t *record) {
     if (keycode >= KC_HID_BTN_1 && keycode < HID_CLIPBOARD_SAFE_RANGE) {
-        uint8_t  btn_id  = keycode - KC_HID_BTN_1 + 1;  /* 1-based */
+        uint16_t btn_id  = keycode - KC_HID_BTN_1 + 1;  /* 1-based */
         uint64_t btn_bit = (uint64_t)1 << (btn_id - 1);
 
         if (record->event.pressed) {
             uint8_t pkt[RAW_EPSIZE] = {0};
             pkt[0] = HID_CMD_BUTTON;
-            pkt[1] = btn_id;
+            pkt[1] = (uint8_t)(btn_id & 0xFF);
+            pkt[2] = (uint8_t)(btn_id >> 8);
             dprintf("hid_clipboard: button %u pressed, sending HID_CMD_BUTTON\n", btn_id);
             raw_hid_send(pkt, RAW_EPSIZE);
 

@@ -60,6 +60,12 @@
  * Clipboard request (0x04) — keyboard → host: [0x04, 0x00...]
  *   Sent by the keyboard when TYPCLIP is pressed.
  *   Host daemon (listen mode) responds by sending 0x03 chunks.
+ *
+ * Button press (0x05) — keyboard → host:
+ *   [0]  0x05
+ *   [1]  btn_id_lo  (low byte of 1-based uint16 button ID)
+ *   [2]  btn_id_hi  (high byte)
+ *   [3..31] zeroes
  */
 
 /* Command IDs — keep in sync with CMD_ID constants in qmk_hid_tool.py */

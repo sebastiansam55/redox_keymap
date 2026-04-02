@@ -452,7 +452,7 @@ class ListenCommand(Command):
                         print("Keyboard requested clipboard")
                         self._send_clipboard(dev, timeout_ms)
                     elif data[0] == self.CMD_BUTTON:
-                        btn_id = str(data[1])
+                        btn_id = str(data[1] | (data[2] << 8))
                         entry = self._button_config.get(btn_id)
                         if entry:
                             action = entry.get("action")
