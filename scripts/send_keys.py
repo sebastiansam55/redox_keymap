@@ -109,27 +109,30 @@ def resolve_key(token: str) -> int:
     """Return the uinput constant for a single key token.
 
     Accepts:
-      - modifier aliases (ctrl, alt, shift, super, …)
-      - KEY_* constant names (KEY_PLAYPAUSE, KEY_A, …)
+      - modifier aliases (ctrl, alt, shift, super, ...)
+      - KEY_* constant names (KEY_PLAYPAUSE, KEY_A, ...)
+      - BTN_* constant names (BTN_LEFT, BTN_RIGHT, ...)
       - bare letter/name that gets a KEY_ prefix (a -> KEY_A, f10 -> KEY_F10)
     """
-    lower = token.strip().lower()
+    token = token.strip()
+    lower = token.lower()
 
     if lower in MODIFIER_MAP:
         return MODIFIER_MAP[lower]
 
-    # Canonicalise to KEY_<UPPER>
-    upper = lower if lower.startswith("key_") else f"key_{lower}"
-    attr = upper.upper()
+    # Canonicalise to <UPPER>
+    upper = token.upper()
+    if not upper.startswith("KEY_") and not upper.startswith("BTN_"):
+        upper = f"KEY_{upper}"
 
-    if not hasattr(uinput, attr):
+    if not hasattr(uinput, upper):
         sys.exit(
             f"Unknown key: {token!r}\n"
-            f"  Tried uinput.{attr} — check https://github.com/tuomasjjrasanen/python-uinput "
-            f"or run: python -c \"import uinput; print([x for x in dir(uinput) if x.startswith('KEY_')])\""
+            f"  Tried uinput.{upper} — check https://github.com/tuomasjjrasanen/python-uinput "
+            f"or run: python -c \"import uinput; print([x for x in dir(uinput) if x.startswith(('KEY_', 'BTN_'))])\""
         )
 
-    return getattr(uinput, attr)
+    return getattr(uinput, upper)
 
 
 def parse_combo(combo_str: str) -> list[int]:
