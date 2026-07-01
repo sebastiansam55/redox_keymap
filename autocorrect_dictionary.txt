@@ -14,3 +14,9 @@ certian -> certain
 enviroment -> environment
 signifigant -> significant
 popluated -> populated
+convient -> convenient
+connectivitiy -> connectivity
+isntall -> install
+reseting -> resetting
+recipt -> receipt
+intstall -> install
