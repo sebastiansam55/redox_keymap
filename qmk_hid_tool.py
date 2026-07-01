@@ -324,15 +324,21 @@ class ListenCommand(Command):
     MAX_CHUNKS        = TypeClipboardCommand.MAX_CHUNKS
     MAX_TEXT_BYTES    = TypeClipboardCommand.MAX_TEXT_BYTES
 
-    def __init__(self, config_path: str = "~/.config/qmk_buttons.json") -> None:
+    def __init__(self, config_path: str = "~/.config/qmk_buttons.json", on_disconnect: str | None = None, on_reconnect: str | None = None) -> None:
         path = os.path.expanduser(config_path)
+        config = {}
         if os.path.exists(path):
-            with open(path) as f:
-                config = json.load(f)
+            try:
+                with open(path) as f:
+                    config = json.load(f)
+            except Exception as e:
+                print(f"[warn] failed to load config: {e}", file=sys.stderr)
             self._button_config = config.get("buttons", {})
         else:
             self._button_config = {}
             print(f"[warn] button config not found: {path}", file=sys.stderr)
+        self._on_disconnect = on_disconnect or config.get("on_disconnect")
+        self._on_reconnect = on_reconnect or config.get("on_reconnect")
 
     # build_packet / handle_response are unused; run() drives everything.
     def build_packet(self) -> bytes:  # pragma: no cover
@@ -411,6 +417,14 @@ class ListenCommand(Command):
 
         self._send_text(dev, timeout_ms, result)
 
+    def _run_cmd(self, cmd: str | None, label: str) -> None:
+        if cmd:
+            print(f"Running {label} command: {cmd}", file=sys.stderr)
+            try:
+                subprocess.Popen(cmd, shell=True)
+            except Exception as exc:
+                print(f"Failed to run {label} command: {exc}", file=sys.stderr)
+
     def _reconnect(self, device_info: dict, retry_interval: float = 2.0) -> tuple[hid.Device, dict]:
         """Block until the device reappears, then return a new (dev, device_info) pair."""
         vid        = device_info["vendor_id"]
@@ -418,6 +432,7 @@ class ListenCommand(Command):
         usage_page = device_info["usage_page"]
         usage      = device_info["usage"]
         print(f"Keyboard disconnected. Waiting to reconnect (VID=0x{vid:04X} PID=0x{pid:04X})…")
+        self._run_cmd(self._on_disconnect, "disconnect")
         while True:
             time.sleep(retry_interval)
             new_info = find_device(vid, pid, usage_page, usage)
@@ -429,6 +444,7 @@ class ListenCommand(Command):
                             if isinstance(new_info["path"], bytes)
                             else new_info["path"])
                 print(f"Reconnected on {path_str}")
+                self._run_cmd(self._on_reconnect, "reconnect")
                 return dev, new_info
             except Exception as exc:
                 log.debug("Reconnect attempt failed: %s", exc)
@@ -666,6 +682,14 @@ def build_parser() -> argparse.ArgumentParser:
         "--config", default="~/.config/qmk_buttons.json", metavar="PATH",
         help="Path to button action config JSON (default: ~/.config/qmk_buttons.json)",
     )
+    listen_p.add_argument(
+        "--on-disconnect", default=None, metavar="CMD",
+        help="Shell command to run when the keyboard disconnects.",
+    )
+    listen_p.add_argument(
+        "--on-reconnect", default=None, metavar="CMD",
+        help="Shell command to run when the keyboard reconnects.",
+    )
 
     return parser
 
@@ -680,7 +704,11 @@ def build_command(args: argparse.Namespace) -> Command:
     if args.command == "type-clipboard":
         return TypeClipboardCommand(text=args.text, delay_ms=args.delay)
     if args.command == "listen":
-        return ListenCommand(config_path=args.config)
+        return ListenCommand(
+            config_path=args.config,
+            on_disconnect=args.on_disconnect,
+            on_reconnect=args.on_reconnect,
+        )
     raise ValueError(f"Unknown command: {args.command!r}")
 
 
