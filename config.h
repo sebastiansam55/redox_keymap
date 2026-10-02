@@ -2,6 +2,13 @@
 // KC_HID_BTN_32 -> KC_HID_BTN_35 will repeat when held
 #define HID_BTN_REPEAT_MASK ((1ULL << 31) | (1ULL << 32) | (1ULL << 33) | (1ULL << 34))
 
+// Split keyboard handedness & USB detection
+#ifdef MASTER_RIGHT
+#undef MASTER_RIGHT
+#endif
+// #define MASTER_LEFT
+#define EE_HANDS
+#define SPLIT_USB_DETECT
 
 // Tapping term for Tap Dance, LT, etc. (default is 200)
 #define TAPPING_TERM 400
