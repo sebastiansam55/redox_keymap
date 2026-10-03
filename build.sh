@@ -1,6 +1,26 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+UPDATE_QMK=false
+BUILD_ONLY=false
+
+while [[ "$#" -gt 0 ]]; do
+  case $1 in
+  -u | --update-qmk)
+    UPDATE_QMK=true
+    shift
+    ;;
+  -b | --build-only)
+    BUILD_ONLY=true
+    shift
+    ;;
+  *)
+    echo "Unknown parameter passed: $1"
+    exit 1
+    ;;
+  esac
+done
+
 KEYBOARD="redox/rev1"
 KEYMAP="sebastiansam55"
 QMK_DIR="${HOME}/git/qmk_firmware/"
@@ -13,6 +33,25 @@ if ! command -v qmk >/dev/null 2>&1; then
   echo "qmk setup"
   exit 1
 fi
+
+echo "Checking if qmk_firmware is up to date..."
+cd "$QMK_DIR"
+git fetch origin master >/dev/null 2>&1 || true
+LOCAL=$(git rev-parse HEAD 2>/dev/null || true)
+REMOTE=$(git rev-parse origin/master 2>/dev/null || true)
+
+if [[ -n "$LOCAL" && -n "$REMOTE" && "$LOCAL" != "$REMOTE" ]]; then
+  if [[ "$UPDATE_QMK" == "true" ]]; then
+    echo "Updating QMK firmware..."
+    git pull
+    make git-submodule
+  else
+    echo "Warning: qmk_firmware is not up to date with origin/master."
+    echo "Run with -u or --update-qmk to update before building."
+    exit 1
+  fi
+fi
+cd "$REPO_DIR"
 
 KEYMAP_DIR="$QMK_DIR/keyboards/redox/keymaps/sebastiansam55"
 mkdir -p "$KEYMAP_DIR"
@@ -47,6 +86,18 @@ UF2_FILE="$(ls -t ./*.uf2 2>/dev/null | head -n1 || true)"
 if [[ -z "$UF2_FILE" ]]; then
   echo "Error: No .uf2 file found after compilation."
   exit 1
+fi
+
+# Archive the firmware
+mkdir -p "$REPO_DIR/archive"
+TIMESTAMP="$(date +'%Y-%m-%d_%H-%M-%S')"
+ARCHIVE_NAME="$(basename "$UF2_FILE" .uf2)_${TIMESTAMP}.uf2"
+cp "$UF2_FILE" "$REPO_DIR/archive/$ARCHIVE_NAME"
+echo "Archived firmware to archive/$ARCHIVE_NAME"
+
+if [[ "$BUILD_ONLY" == "true" ]]; then
+  echo "Build successful! Skipping flashing because --build-only was passed."
+  exit 0
 fi
 
 # Find the Elite-Pi / RP2040 drive (shows up as RPI-RP2 in bootloader mode)
