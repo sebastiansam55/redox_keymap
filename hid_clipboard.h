@@ -74,6 +74,7 @@
 #define HID_CLIP_CMD        0x03  /* host→kb: chunked clipboard text        */
 #define HID_CLIP_REQ_CMD    0x04  /* kb→host: request clipboard from host   */
 #define HID_CMD_BUTTON      0x05  /* kb→host: programmable button press     */
+#define HID_TIME_SYNC_CMD   0x06  /* host→kb: time sync (Unix timestamp)    */
 
 /* Chunk geometry */
 #define HID_CLIP_DATA_OFF   4
@@ -190,6 +191,8 @@ enum hid_clipboard_keycodes {
 /* Public API */
 const char    *hid_clipboard_get_text(void);
 uint16_t       hid_clipboard_get_len(void);
+
+extern uint32_t current_unix_time;
 
 /* Call these from your keymap.c hooks (see WIRING above) */
 void raw_hid_receive_hid_clipboard(uint8_t *data, uint8_t length);

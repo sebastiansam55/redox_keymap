@@ -43,6 +43,8 @@ except ImportError:
         "hid package not found. Install it with:  pip install hidapi"
     )
 
+import struct
+
 # ---------------------------------------------------------------------------
 # Constants (match your keyboard's config.h / info.json)
 # ---------------------------------------------------------------------------
@@ -319,6 +321,7 @@ class ListenCommand(Command):
     CMD_CLIP     = TypeClipboardCommand.CMD_ID          # 0x03
     CMD_CLIP_REQ = 0x04                                 # keyboard → host
     CMD_BUTTON   = 0x05                                 # keyboard → host
+    CMD_TIME_SYNC= 0x06                                 # host → keyboard
     CHUNK_DATA_OFFSET = TypeClipboardCommand.CHUNK_DATA_OFFSET
     CHUNK_DATA_SIZE   = TypeClipboardCommand.CHUNK_DATA_SIZE
     MAX_CHUNKS        = TypeClipboardCommand.MAX_CHUNKS
@@ -455,8 +458,21 @@ class ListenCommand(Command):
         print(f"Listening on {path_str} (Ctrl+C to stop)…")
 
         dev = hid.Device(path=path)
+        last_sync_time = 0
         try:
             while True:
+                now = time.time()
+                if now - last_sync_time >= 10:
+                    try:
+                        sync_packet = bytes([self.CMD_TIME_SYNC]) + struct.pack('<I', int(now))
+                        sync_packet = sync_packet.ljust(RAW_EPSIZE, b"\x00")
+                        write_buf = b"\x00" + sync_packet
+                        dev.write(write_buf)
+                        log.debug("time sync TX: %s", self.pretty(sync_packet))
+                    except Exception as e:
+                        log.debug("failed to send time sync: %s", e)
+                    last_sync_time = now
+
                 try:
                     # Poll with a short timeout so KeyboardInterrupt stays responsive
                     data = dev.read(RAW_EPSIZE, 200)

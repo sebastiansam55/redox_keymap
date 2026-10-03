@@ -5,6 +5,7 @@ Reads:
   keymap.template.c       — committed, public template with marker comments
   private/keycodes.inc    — gitignored: enum custom_keycodes { ... } block
   private/cases.inc       — gitignored: switch case statements
+  private/totp.inc        — gitignored: TOTP encrypted secrets array
 
 Writes:
   keymap.c                — gitignored, passed to QMK for compilation
@@ -12,6 +13,7 @@ Writes:
 Markers in keymap.template.c:
   // %%PRIVATE_KEYCODES%%   replaced by contents of private/keycodes.inc
   // %%PRIVATE_CASES%%      replaced by contents of private/cases.inc
+  // %%PRIVATE_TOTP%%       replaced by contents of private/totp.inc
 """
 
 import sys
@@ -24,6 +26,7 @@ PRIVATE  = REPO / "private"
 
 MARKER_KEYCODES = "// %%PRIVATE_KEYCODES%%"
 MARKER_CASES    = "// %%PRIVATE_CASES%%"
+MARKER_TOTP     = "// %%PRIVATE_TOTP%%"
 
 
 def read_snippet(name: str) -> str:
@@ -42,9 +45,11 @@ def main() -> None:
 
     keycodes = read_snippet("keycodes.inc")
     cases    = read_snippet("cases.inc")
+    totp     = read_snippet("totp.inc")
 
     text = text.replace(MARKER_KEYCODES, keycodes.rstrip())
     text = text.replace(MARKER_CASES,    cases.rstrip())
+    text = text.replace(MARKER_TOTP,     totp.rstrip())
 
     OUTPUT.write_text(text)
     print(f"Generated {OUTPUT}")

@@ -7,6 +7,7 @@ Personal QMK firmware keymap for the [Redox rev1](https://github.com/mattdibi/re
 - **Dvorak base layer** with symbols, F-keys, mouse keys, and macro layers
 - **Leader key shortcuts** — fast git and shell command sequences (`QK_LEAD`)
 - **Raw HID clipboard injection** — type clipboard text directly from the keyboard via a host daemon
+- **Native TOTP generator** — type 6-digit TOTP codes on demand (`KC_TOTP`) using an encrypted on-device secret unlocked via PIN entry (Base32/RC4/HMAC-SHA1). Synchronized to the host daemon's clock.
 - **16-bit HID daemon buttons** — 64 predefined buttons with button-repeat support and 16-bit headroom for desktop automation
 - **Case transformation** — convert selected text to UPPERCASE, lowercase, or Sentence case on the fly
 - **Selection wrapping** — wrap selected text in quotes, brackets, parens, backticks, or angle brackets
@@ -25,6 +26,7 @@ Personal QMK firmware keymap for the [Redox rev1](https://github.com/mattdibi/re
 keymap.template.c           Public keymap template (markers for private injection)
 keymap.c                    Generated — do not edit directly
 hid_clipboard.c/.h          Raw HID clipboard & button module (standalone, no community module)
+totp.c/.h                   HMAC-SHA1 and Base32 TOTP implementation
 config.h                    Keyboard config (tapping term, button repeat mask, EE_HANDS, audio, etc.)
 halconf.h / mcuconf.h       Hardware abstraction config for Elite-Pi (RP2040)
 rules.mk                    QMK feature flags
@@ -36,7 +38,10 @@ qmk_hid_tool.py             Host-side HID tool (ping, echo, raw, type-clipboard,
 qmk-hid-clipboard.service   Systemd user service unit for the listen daemon
 qmk_buttons.example.json    Example button action config — copy to ~/.config/qmk_buttons.json
 scripts/                    Helper scripts for use as qmk_buttons.json shell actions
-private/                    Gitignored — personal keycodes and macro strings
+private/                    Gitignored — personal keycodes, macros, and TOTP secrets
+  ├── keycodes.inc
+  ├── cases.inc
+  └── totp.inc
 ```
 
 ## Build and flash
@@ -50,15 +55,23 @@ qmk setup
 
 # Generate, compile, and flash in one step
 ./build.sh
+
+# Compile only (skips flashing to device and espanso restart)
+./build.sh -b  # or --build-only
+
+# Update qmk_firmware repository before building
+./build.sh -u  # or --update-qmk
 ```
 
 `build.sh` will:
-1. Run `gen_keymap.py` to inject private snippets into `keymap.template.c` → `keymap.c`
-2. Sync source files into `~/git/qmk_firmware/keyboards/redox/keymaps/sebastiansam55/`
-3. Regenerate `autocorrect_data.h` from the dictionary
-4. Compile with `qmk compile -kb redox/rev1 -km sebastiansam55 -e CONVERT_TO=elite_pi` (produces a `.uf2` file)
-5. Wait for the Elite-Pi to appear as an `RPI-RP2` USB drive, then copy the `.uf2` to it
-6. Restart the `espanso` service
+1. (Optional) Update the QMK firmware repo if `-u` is provided
+2. Run `gen_keymap.py` to inject private snippets into `keymap.template.c` → `keymap.c`
+3. Sync source files into `~/git/qmk_firmware/keyboards/redox/keymaps/sebastiansam55/`
+4. Regenerate `autocorrect_data.h` from the dictionary
+5. Compile with `qmk compile -kb redox/rev1 -km sebastiansam55 -e CONVERT_TO=elite_pi` (produces a `.uf2` file)
+6. Archive the produced `.uf2` into `archive/`
+7. (Unless `-b`) Wait for the Elite-Pi to appear as an `RPI-RP2` USB drive, then copy the `.uf2` to it
+8. (Unless `-b`) Restart the `espanso` service
 
 To enter bootloader mode: hold the physical BOOT/RESET button while plugging in USB, or tap `QK_BOOT` from the `_COMBO` layer.
 
@@ -89,6 +102,7 @@ For debug output: set `CONSOLE_ENABLE = yes` in `rules.mk` and run `qmk console`
 
 | Keycode | Description |
 |---------|-------------|
+| `KC_TOTP` | Enter TOTP PIN unlock mode. Types the slot number (e.g. `1`), the PIN, and `Enter`. Generates and types a 6-digit TOTP code for the corresponding encrypted Base32 secret. |
 | `COPYLINE` | Select entire line (Home → Shift+End) then copy (`Ctrl+C`) |
 | `WRAPQU` | Wrap selection in `''`; shifted wraps in `""` |
 | `WRAPBRF` | Wrap selection in `[]`; shifted wraps in `{}` |
@@ -190,6 +204,7 @@ All packets are 32 bytes (`RAW_EPSIZE`):
 | `0x03` | keyboard → host | ACK per chunk |
 | `0x04` | keyboard → host | Clipboard request (sent when `TYPCLIP` pressed) |
 | `0x05` | keyboard → host | Programmable button press; byte 1 = `btn_id & 0xFF`, byte 2 = `btn_id >> 8` (16-bit button ID) |
+| `0x06` | host → keyboard | Time sync (Unix epoch timestamp sent every 10s by daemon to support `KC_TOTP`) |
 
 ## Host tool (`qmk_hid_tool.py`)
 
@@ -382,9 +397,10 @@ Sensitive strings (passwords, URLs, work paths) live in gitignored files:
 ```
 private/keycodes.inc    # enum entries starting from HID_CLIPBOARD_SAFE_RANGE
 private/cases.inc       # switch case handlers
+private/totp.inc        # encrypted TOTP secrets arrays
 ```
 
-`gen_keymap.py` replaces `// %%PRIVATE_KEYCODES%%` and `// %%PRIVATE_CASES%%` markers in `keymap.template.c` to produce `keymap.c`. Both generated files are gitignored.
+`gen_keymap.py` replaces `// %%PRIVATE_KEYCODES%%`, `// %%PRIVATE_CASES%%`, and `// %%PRIVATE_TOTP%%` markers in `keymap.template.c` to produce `keymap.c`. Both generated files are gitignored.
 
 ## Autocorrect
 

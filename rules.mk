@@ -1,4 +1,5 @@
 SRC += hid_clipboard.c
+SRC += totp.c
 
 DYNAMIC_MACRO_ENABLE = yes
 DIGITIZER_ENABLE = yes

@@ -7,13 +7,13 @@ PartOf=graphical-session.target
 [Service]
 Type=simple
 # --- Edit these three values ---
-ExecStart=/usr/bin/python3 /home/%u/redox/qmk_hid_tool.py \
+ExecStart=/usr/bin/python3 /home/%u/.dotfiles/redox/qmk_hid_tool.py \
     --vid 0x4D44 \
     --pid 0x5244 \
     --timeout 8000 \
     --debug \
     listen \
-    --config /home/%u/redox/qmk_buttons.json
+    --config /home/%u/.dotfiles/redox/qmk_buttons.json
 # --------------------------------
 
 Restart=on-failure

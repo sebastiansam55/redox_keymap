@@ -16,7 +16,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include QMK_KEYBOARD_H
+#include <string.h>
 #include "hid_clipboard.h"
+#include "totp.h"
 #include "print.h"
 #include "digitizer.h"
 #include "os_detection.h"
@@ -42,6 +44,7 @@ enum custom_keycodes {
     MNXT_OS,   /* KC_MNXT on Windows, HID_NXT on Linux */
     VOLD_OS,   /* KC_VOLD on Windows, HID_VLD on Linux */
     VOLU_OS,   /* KC_VOLU on Windows, HID_VLU on Linux */
+    KC_TOTP,   /* Type out 6-digit TOTP */
 // %%PRIVATE_KEYCODES%%
 };
 
@@ -209,7 +212,101 @@ void keyboard_post_init_user(void) {
     tap_code16(C(KC_V));        \
     SEND_STRING(close)
 
+typedef struct {
+    const uint8_t *encrypted_secret;
+    uint8_t length;
+} totp_secret_t;
+
+// %%PRIVATE_TOTP%%
+
+static bool totp_unlock_mode = false;
+static char totp_pin[32];
+static uint8_t totp_pin_len = 0;
+static int8_t totp_slot_id = -1;
+
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    if (totp_unlock_mode) {
+        // Let QMK handle all key releases to prevent stuck layers and stuck modifiers!
+        if (!record->event.pressed) return true;
+        
+        // Let QMK handle modifier keys so Shift works for the PIN
+        if (keycode >= KC_LCTL && keycode <= KC_RGUI) return true;
+        
+        if (keycode == KC_ENTER) {
+            totp_unlock_mode = false;
+            if (totp_slot_id >= 0 && totp_slot_id < NUM_TOTP_SECRETS) {
+                if (current_unix_time != 0) {
+                    char totp_code[7];
+                    generate_encrypted_totp(
+                        TOTP_SECRETS[totp_slot_id].encrypted_secret, 
+                        TOTP_SECRETS[totp_slot_id].length, 
+                        totp_pin, totp_pin_len, current_unix_time, totp_code
+                    );
+                    for (uint8_t i = 0; i < 6; i++) {
+                        if (totp_code[i] == '0') {
+                            tap_code(KC_0);
+                        } else {
+                            tap_code(KC_1 + (totp_code[i] - '1'));
+                        }
+                        wait_ms(30);
+                    }
+                    PLAY_SONG(song_list_one_up_sound);
+                } else {
+                    send_string("[TOTP UNSYNCED]");
+                    PLAY_SONG(song_list_mario_gameover);
+                }
+            } else {
+                send_string("[INVALID SLOT]");
+                PLAY_SONG(song_list_mario_gameover);
+            }
+            memset(totp_pin, 0, sizeof(totp_pin));
+            totp_pin_len = 0;
+            totp_slot_id = -1;
+            return false;
+        } else if (keycode == KC_ESC) {
+            totp_unlock_mode = false;
+            memset(totp_pin, 0, sizeof(totp_pin));
+            totp_pin_len = 0;
+            totp_slot_id = -1;
+            PLAY_SONG(song_list_mario_gameover);
+            return false;
+        } else if (keycode == KC_BSPC) {
+            if (totp_pin_len > 0) {
+                totp_pin[--totp_pin_len] = '\0';
+                PLAY_SONG(song_list_coin_sound);
+            } else if (totp_slot_id != -1) {
+                totp_slot_id = -1;
+                PLAY_SONG(song_list_coin_sound);
+            }
+            return false;
+        } else {
+            char c = 0;
+            if (keycode >= KC_A && keycode <= KC_Z) c = 'a' + (keycode - KC_A);
+            else if (keycode >= KC_1 && keycode <= KC_9) c = '1' + (keycode - KC_1);
+            else if (keycode == KC_0) c = '0';
+            
+            bool is_shifted = (get_mods() & MOD_MASK_SHIFT) != 0;
+            if (is_shifted && c >= 'a' && c <= 'z') c -= 32;
+            
+            if (c) {
+                if (totp_slot_id == -1) {
+                    if (c >= '1' && c <= '9') {
+                        totp_slot_id = c - '1'; // '1' -> index 0
+                        PLAY_SONG(song_list_coin_sound);
+                    } else if (c == '0') {
+                        totp_slot_id = 9;       // '0' -> index 9
+                        PLAY_SONG(song_list_coin_sound);
+                    }
+                } else if (totp_pin_len < sizeof(totp_pin) - 1) {
+                    totp_pin[totp_pin_len++] = c;
+                    totp_pin[totp_pin_len] = '\0';
+                    PLAY_SONG(song_list_coin_sound);
+                }
+            }
+            return false;
+        }
+    }
+
     if (keycode == TYPCLIP && record->event.pressed) {
         PLAY_SONG(song_list_coin_sound);
     }
@@ -237,6 +334,15 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     }
     if (!process_record_hid_clipboard(keycode, record)) return false;
     switch (keycode) {
+        case KC_TOTP:
+            if (record->event.pressed) {
+                totp_unlock_mode = true;
+                memset(totp_pin, 0, sizeof(totp_pin));
+                totp_pin_len = 0;
+                totp_slot_id = -1;
+                PLAY_SONG(song_list_zelda_puzzle);
+            }
+            return false;
         case WINTEMP:
             if (record->event.pressed) {
                 PLAY_SONG(song_list_coin_sound);
@@ -469,7 +575,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
   [_SYMB] = LAYOUT(
   //┌────────┬────────┬────────┬────────┬────────┬────────┐                                           ┌────────┬────────┬────────┬────────┬────────┬────────┐
-     _______ ,KC_F1   ,KC_F2   ,KC_F3   ,KC_F4   ,KC_F5   ,                                            XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,
+     KC_TOTP ,KC_F1   ,KC_F2   ,KC_F3   ,KC_F4   ,KC_F5   ,                                            XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,
   //├────────┼────────┼────────┼────────┼────────┼────────┼────────┐                         ┌────────┼────────┼────────┼────────┼────────┼────────┼────────┤
      _______ ,KC_F6   ,KC_F7   ,KC_F8   ,KC_F9   ,KC_F10  ,_______ ,                          _______ ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,XXXXXXX ,
   //├────────┼────────┼────────┼────────┼────────┼────────┼────────┤                         ├────────┼────────┼────────┼────────┼────────┼────────┼────────┤

@@ -69,6 +69,8 @@ cp "$REPO_DIR/mcuconf.h" "$KEYMAP_DIR/mcuconf.h"
 cp "$REPO_DIR/user_song_list.h" "$KEYMAP_DIR/user_song_list.h"
 cp "$REPO_DIR/hid_clipboard.c" "$KEYMAP_DIR/hid_clipboard.c"
 cp "$REPO_DIR/hid_clipboard.h" "$KEYMAP_DIR/hid_clipboard.h"
+cp "$REPO_DIR/totp.c" "$KEYMAP_DIR/totp.c"
+cp "$REPO_DIR/totp.h" "$KEYMAP_DIR/totp.h"
 cp "$REPO_DIR/rules.mk" "$KEYMAP_DIR/rules.mk"
 cp "$REPO_DIR/autocorrect_dictionary.txt" "$KEYMAP_DIR/autocorrect_dictionary.txt"
 

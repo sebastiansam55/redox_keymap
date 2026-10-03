@@ -25,6 +25,10 @@ static uint64_t hid_btn_held_mask    = 0;     /* bit (btn_id-1) set while key he
 static uint32_t hid_btn_repeat_timer = 0;
 static bool     hid_btn_in_delay     = false; /* true = waiting for initial delay */
 
+/* Time sync state */
+uint32_t current_unix_time = 0;
+static uint32_t last_local_timer = 0;
+
 /* -- Public API ------------------------------------------------------------ */
 
 const char *hid_clipboard_get_text(void) { return hid_clip_buf; }
@@ -59,6 +63,12 @@ void raw_hid_receive_hid_clipboard(uint8_t *data, uint8_t length) {
 
     case HID_CLIP_CMD:
         break;  /* handled below */
+
+    case HID_TIME_SYNC_CMD:
+        current_unix_time = data[1] | ((uint32_t)data[2] << 8) | ((uint32_t)data[3] << 16) | ((uint32_t)data[4] << 24);
+        last_local_timer = timer_read32();
+        dprintf("hid_clipboard: time sync %lu\n", current_unix_time);
+        return;
 
     default:
         dprintf("hid_clipboard: unknown cmd=0x%02X, ignoring\n", data[0]);
@@ -144,6 +154,16 @@ void raw_hid_receive_hid_clipboard(uint8_t *data, uint8_t length) {
  * Types out the buffered text once hid_clip_ready is signalled.
  */
 void housekeeping_task_hid_clipboard(void) {
+    /* -- Time keeping -- */
+    if (current_unix_time != 0) {
+        uint32_t elapsed = timer_elapsed32(last_local_timer);
+        if (elapsed >= 1000) {
+            uint32_t secs = elapsed / 1000;
+            current_unix_time += secs;
+            last_local_timer += secs * 1000;
+        }
+    }
+
     /* -- Button repeat -- */
     if (hid_btn_held_mask != 0) {
         uint32_t threshold = hid_btn_in_delay
