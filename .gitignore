@@ -8,3 +8,6 @@ private/
 
 #other
 scripts/__pycache__/*
+
+# Firmware archive
+archive/
